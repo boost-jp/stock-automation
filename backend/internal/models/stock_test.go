@@ -280,9 +280,9 @@ func TestTechnicalIndicator_SignalStrength(t *testing.T) {
 			name: "Neutral signal",
 			indicator: TechnicalIndicator{
 				RSI:       50.0, // Neutral
-				MACD:      1.0,
+				MACD:      0.5,
 				Signal:    0.5,
-				Histogram: 0.5,
+				Histogram: 0.0, // No momentum
 			},
 			expectedStrength: "Neutral",
 		},
