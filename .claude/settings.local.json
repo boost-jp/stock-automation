@@ -57,7 +57,8 @@
       "Bash(GOPATH=/Users/yuta.tasaka/go PATH=$PATH:/Users/yuta.tasaka/go/bin go run github.com/aarondl/sqlboiler/v4@latest mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional)",
       "Bash(/Users/yuta.tasaka/go/bin/sqlboiler mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional)",
       "Bash(/Users/yuta.tasaka/go/bin/sqlboiler --no-driver-templates --templates templates/sqlboiler/main --templates templates/sqlboiler/additional mysql)",
-      "Bash(go build:*)"
+      "Bash(go build:*)",
+      "Bash(go fmt:*)"
     ],
     "deny": []
   }
