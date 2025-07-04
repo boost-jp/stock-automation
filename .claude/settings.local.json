@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(go mod:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose:*)",
+      "Bash(go get:*)",
+      "Bash(GOPATH=/Users/yuta.tasaka/boost/memo/repo/stock-automation SLACK_WEBHOOK_URL=\"https://hooks.slack.com/services/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\" go run -C /Users/yuta.tasaka/boost/memo/repo/stock-automation cmd/main.go)",
+      "Bash(rm:*)",
+      "Bash(go run:*)",
+      "Bash(docker volume rm:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker logs:*)",
+      "Bash(grep:*)",
+      "Bash(GOPATH=/Users/yuta.tasaka/boost/memo/repo/stock-automation go run test_db_charset.go)",
+      "Bash(ls:*)",
+      "Bash(/opt/homebrew/bin/go version)",
+      "Bash(timeout 10 /opt/homebrew/bin/go run cmd/main.go)"
+    ],
+    "deny": []
+  }
+}
