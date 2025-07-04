@@ -46,5 +46,5 @@ func main() {
 	}
 
 	fmt.Println()
-	fmt.Println("🎉 Yahoo Finance API統合テスト完了")
+	fmt.Println("🎉 Yahoo Finance API統合テスト完了！")
 }

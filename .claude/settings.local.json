@@ -35,7 +35,8 @@
       "Bash(git commit:*)",
       "Bash(gh pr checks:*)",
       "Bash(gofmt:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(gh pr view:*)"
     ],
     "deny": []
   }
