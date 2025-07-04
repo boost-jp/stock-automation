@@ -22,6 +22,8 @@ install-tools: ## Install development tools
 	@go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest || echo "gosec install failed, continuing..."
 	@go install golang.org/x/tools/cmd/goimports@latest
 	@go install github.com/swaggo/swag/cmd/swag@latest
+	@go install github.com/sqldef/sqldef/cmd/mysqldef@latest
+	@go install github.com/aarondl/sqlboiler/v4@latest
 	@echo "Development tools installed successfully"
 
 # Build
@@ -100,15 +102,40 @@ run: ## Run the application
 	@go run $(MAIN_FILE)
 
 # Database
-migrate: ## Run database migrations
-	@echo "Running database migrations..."
-	@go run cmd/migrate.go
+DB_HOST ?= localhost
+DB_PORT ?= 3309
+DB_USER ?= root
+DB_PASS ?= password
+DB_NAME ?= stock_automation
+
+db-setup: ## Create database if not exists
+	@echo "Creating database if not exists..."
+	@docker exec stock-automation-mysql mysql -u$(DB_USER) -p$(DB_PASS) -e "CREATE DATABASE IF NOT EXISTS $(DB_NAME) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+db-migrate: ## Apply database schema using mysqldef
+	@echo "Applying database schema..."
+	@go run github.com/sqldef/sqldef/cmd/mysqldef@latest -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(DB_NAME) < schema.sql
+
+sqlboiler-generate: ## Generate SQLBoiler models
+	@echo "Generating SQLBoiler models..."
+	@echo "Step 1: Generate DAO package..."
+	@rm -rf internal/infrastructure/dao/*.go
+	@go run github.com/aarondl/sqlboiler/v4@latest mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional
+	@echo "Step 2: Generate domain models..."
+	@go run github.com/aarondl/sqlboiler/v4@latest mysql -o internal/infrastructure/dto -p models --no-driver-templates --wipe --templates templates/sqlboiler/models
+	@echo "Step 3: Move models to domain..."
+	@rm -fr internal/domain/models/*.base.go
+	@mv -n internal/infrastructure/dto/*.go internal/domain/models/ 2>/dev/null || true
+	@rm -rf internal/infrastructure/dto/*.go
+
+migrate: db-migrate ## Run database migrations (alias for db-migrate)
 
 # Cleanup
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
 	@rm -f $(BINARY_NAME) $(BINARY_NAME)-linux
 	@rm -f $(COVERAGE_FILE) coverage.html
+	@rm -rf internal/models_generated
 	@go clean
 
 clean-all: clean docker-down ## Clean everything including Docker containers

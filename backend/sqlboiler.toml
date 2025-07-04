@@ -1,0 +1,41 @@
+# SQLBoiler Configuration
+
+[mysql]
+  # Database connection parameters
+  dbname = "stock_automation"
+  host = "localhost"
+  port = 3309
+  user = "root"
+  pass = "password"
+  sslmode = "disable"
+
+# Code generation parameters
+output = "internal/infrastructure/dao"
+pkgname = "dao"
+wipe = true
+add-global-variants = false
+add-panic-variants = false
+
+# MySQL specific settings
+add-soft-deletes = false
+no-auto-timestamps = false
+
+# File naming
+struct-tag-casing = "snake"
+
+# Template settings
+templates = ["./templates/sqlboiler"]
+
+[imports.all]
+  third_party = [
+  'models "github.com/boost-jp/adcast-backend/app/domain/models"',
+  'cerrors "github.com/boost-jp/adcast-backend/app/errors"',
+  'errors "github.com/boost-jp/adcast-backend/app/errors/boilerrors"',
+  '"github.com/volatiletech/sqlboiler/v4/drivers"',
+  '"github.com/volatiletech/sqlboiler/v4/boil"',
+  '"github.com/volatiletech/sqlboiler/v4/queries"',
+  '"github.com/volatiletech/sqlboiler/v4/queries/qm"',
+  '"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"',
+  '"github.com/volatiletech/strmangle"']
+
+
