@@ -18,7 +18,7 @@ type DB struct {
 func NewDB() (*DB, error) {
 	// データベース接続設定
 	dsn := "root:password@tcp(localhost:3309)/stock_automation?charset=utf8mb4&parseTime=True&loc=Local&collation=utf8mb4_unicode_ci&sql_mode=''"
-	
+
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -40,20 +40,24 @@ func NewDB() (*DB, error) {
 	if err := db.Exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci").Error; err != nil {
 		return nil, fmt.Errorf("failed to set charset: %w", err)
 	}
-	
+
 	if err := db.Exec("SET character_set_client = utf8mb4").Error; err != nil {
 		return nil, fmt.Errorf("failed to set character_set_client: %w", err)
 	}
-	
+
 	if err := db.Exec("SET character_set_connection = utf8mb4").Error; err != nil {
 		return nil, fmt.Errorf("failed to set character_set_connection: %w", err)
 	}
-	
+
 	if err := db.Exec("SET character_set_results = utf8mb4").Error; err != nil {
 		return nil, fmt.Errorf("failed to set character_set_results: %w", err)
 	}
 
 	return &DB{conn: db}, nil
+}
+
+func (db *DB) GetDB() *gorm.DB {
+	return db.conn
 }
 
 func (db *DB) AutoMigrate() error {

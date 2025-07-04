@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussion
+    url: https://github.com/stock-automation/discussions
+    about: 質問や議論はDiscussionsをご利用ください
+  - name: 📚 Documentation
+    url: https://github.com/stock-automation/docs
+    about: ドキュメントを確認してください
+  - name: 🆘 Support
+    url: https://github.com/stock-automation/discussions/categories/q-a
+    about: サポートが必要な場合はQ&Aカテゴリをご利用ください

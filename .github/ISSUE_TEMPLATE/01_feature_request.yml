@@ -1,0 +1,59 @@
+name: 🚀 機能要求 (Feature Request)
+description: 新機能や機能改善の要求を作成
+title: "[FEATURE] "
+labels: ["enhancement"]
+assignees: []
+
+body:
+  - type: input
+    id: feature-title
+    attributes:
+      label: 機能名
+      placeholder: "例: 日次レポート自動生成"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      options:
+        - "🔴 高"
+        - "🟡 中"
+        - "🟢 低"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 説明
+      description: 何を・なぜ・どうやって実装するか
+      placeholder: |
+        ## 何を
+        日次ポートフォリオレポートの自動生成
+
+        ## なぜ  
+        毎日の手動確認が面倒だから
+
+        ## どうやって
+        スケジューラーで18:00に自動実行、Slack通知
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: 完了条件
+      placeholder: |
+        - [ ] 毎日18:00に自動実行される
+        - [ ] Slackに結果が通知される
+        - [ ] エラー時も通知される
+    validations:
+      required: true
+
+  - type: input
+    id: effort-estimate
+    attributes:
+      label: 工数見積
+      placeholder: "例: 2日"

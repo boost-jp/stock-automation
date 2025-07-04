@@ -40,7 +40,7 @@ func main() {
 
 	// データコレクター初期化
 	collector := api.NewDataCollector(db)
-	
+
 	// 監視銘柄とポートフォリオの初期読み込み
 	if err := collector.UpdateWatchList(); err != nil {
 		logrus.Error("Failed to initialize watch list:", err)
@@ -65,16 +65,16 @@ func main() {
 	case <-sigChan:
 		logrus.Info("Received shutdown signal")
 		scheduler.Stop()
-		
+
 		// 終了通知
 		if err := notifier.SendMessage("🔴 Stock Automation System Stopped"); err != nil {
 			logrus.Error("Failed to send shutdown notification:", err)
 		}
-		
+
 		// グレースフルシャットダウン
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer shutdownCancel()
-		
+
 		<-shutdownCtx.Done()
 		logrus.Info("Application stopped")
 	}

@@ -1,0 +1,59 @@
+name: 📋 タスク (Task)
+description: 開発タスクや作業項目を作成
+title: "[TASK] "
+labels: ["task"]
+assignees: []
+
+body:
+  - type: input
+    id: task-title
+    attributes:
+      label: タスク名
+      placeholder: "例: ユーザーモデルの単体テスト作成"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      options:
+        - "🔴 高"
+        - "🟡 中"
+        - "🟢 低"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 作業内容
+      placeholder: |
+        ## 何をするか
+        ユーザーモデルの単体テストを作成
+
+        ## なぜ必要か
+        テストカバレッジを向上させるため
+
+        ## 成果物
+        - user_test.go ファイル
+        - テストカバレッジ 80%以上
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: 完了条件
+      placeholder: |
+        - [ ] テストファイル作成
+        - [ ] 正常ケース・エラーケースのテスト
+        - [ ] カバレッジ 80%以上
+    validations:
+      required: true
+
+  - type: input
+    id: effort-estimate
+    attributes:
+      label: 工数見積
+      placeholder: "例: 半日"
