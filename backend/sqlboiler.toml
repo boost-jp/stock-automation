@@ -13,25 +13,6 @@
 output = "internal/infrastructure/dao"
 pkgname = "dao"
 wipe = true
-add-global-variants = false
-add-panic-variants = false
 
-# MySQL specific settings
-add-soft-deletes = false
-no-auto-timestamps = false
-
-# File naming
-struct-tag-casing = "snake"
-
-# Template settings
-#templates = ["./templates/sqlboiler"]
-
-[imports.all]
-  third_party = [
-  '"github.com/volatiletech/sqlboiler/v4/boil"',
-  '"github.com/volatiletech/sqlboiler/v4/queries"',
-  '"github.com/volatiletech/sqlboiler/v4/queries/qm"',
-  '"github.com/volatiletech/sqlboiler/v4/queries/qmhelper"',
-  '"github.com/volatiletech/strmangle"']
 
 
