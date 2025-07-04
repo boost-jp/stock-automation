@@ -41,7 +41,8 @@
       "Bash(GOPATH=/Users/yuta.tasaka/boost/memo/repo/stock-automation/backend /opt/homebrew/bin/go -C /Users/yuta.tasaka/boost/memo/repo/stock-automation/backend mod tidy)",
       "Bash(exec /opt/homebrew/bin/go -C /Users/yuta.tasaka/boost/memo/repo/stock-automation/backend mod tidy)",
       "Bash(exec /opt/homebrew/bin/go -C /Users/yuta.tasaka/boost/memo/repo/stock-automation/backend fmt ./...)",
-      "Bash(exec /opt/homebrew/bin/go -C /Users/yuta.tasaka/boost/memo/repo/stock-automation/backend vet ./...)"
+      "Bash(exec /opt/homebrew/bin/go -C /Users/yuta.tasaka/boost/memo/repo/stock-automation/backend vet ./...)",
+      "Bash(exec:*)"
     ],
     "deny": []
   }
