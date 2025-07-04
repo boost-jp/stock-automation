@@ -19,7 +19,7 @@ help: ## Display help message
 install-tools: ## Install development tools
 	@echo "Installing development tools..."
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	@go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+	@go install github.com/securecodewarrior/gosec/v2/cmd/gosec@v2.18.2
 	@go install golang.org/x/tools/cmd/goimports@latest
 	@go install github.com/swaggo/swag/cmd/swag@latest
 	@echo "Development tools installed successfully"

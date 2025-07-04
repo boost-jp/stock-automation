@@ -27,7 +27,12 @@
       "Bash(gh issue edit:*)",
       "Bash(gh issue close:*)",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
