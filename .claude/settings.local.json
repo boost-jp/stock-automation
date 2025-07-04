@@ -44,7 +44,9 @@
       "Bash(exec /opt/homebrew/bin/go -C /Users/yuta.tasaka/boost/memo/repo/stock-automation/backend vet ./...)",
       "Bash(exec:*)",
       "Bash(gh issue list:*)",
-      "Bash(gh issue:*)"
+      "Bash(gh issue:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git pull:*)"
     ],
     "deny": []
   }
