@@ -18,7 +18,16 @@
       "Bash(ls:*)",
       "Bash(/opt/homebrew/bin/go version)",
       "Bash(timeout 10 /opt/homebrew/bin/go run cmd/main.go)",
-      "Bash(git rev-list:*)"
+      "Bash(git rev-list:*)",
+      "Bash(find:*)",
+      "Bash(gh milestone create:*)",
+      "Bash(gh issue create:*)",
+      "Bash(gh label create:*)",
+      "Bash(gh api:*)",
+      "Bash(gh issue edit:*)",
+      "Bash(gh issue close:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

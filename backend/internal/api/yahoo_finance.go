@@ -52,6 +52,12 @@ func NewYahooFinanceClient() *YahooFinanceClient {
 	client.SetTimeout(30 * time.Second)
 	client.SetRetryCount(3)
 	client.SetRetryWaitTime(1 * time.Second)
+	client.SetRetryMaxWaitTime(10 * time.Second)
+	
+	// Add exponential backoff for retries
+	client.AddRetryCondition(func(r *resty.Response, err error) bool {
+		return r.StatusCode() >= 500 || r.StatusCode() == 429
+	})
 
 	return &YahooFinanceClient{
 		client:  client,
@@ -135,12 +141,29 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 	}
 
 	result := response.Chart.Result[0]
+	
+	// Check for API errors
+	if response.Chart.Error != nil {
+		return nil, fmt.Errorf("Yahoo Finance API error for %s: %v", stockCode, response.Chart.Error)
+	}
+	
 	timestamps := result.Timestamp
+	if len(result.Indicators.Quote) == 0 {
+		return nil, fmt.Errorf("no quote indicators found for: %s", stockCode)
+	}
+	
 	quotes := result.Indicators.Quote[0]
 
 	var prices []models.StockPrice
 	for i, ts := range timestamps {
-		if i >= len(quotes.Close) || quotes.Close[i] == 0 {
+		// Skip invalid or missing data points
+		if i >= len(quotes.Close) || i >= len(quotes.Open) || i >= len(quotes.High) || 
+		   i >= len(quotes.Low) || i >= len(quotes.Volume) {
+			continue
+		}
+		
+		// Skip zero or negative prices (invalid data)
+		if quotes.Close[i] <= 0 || quotes.Open[i] <= 0 || quotes.High[i] <= 0 || quotes.Low[i] <= 0 {
 			continue
 		}
 

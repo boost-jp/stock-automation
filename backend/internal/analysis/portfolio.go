@@ -1,7 +1,10 @@
 package analysis
 
 import (
+	"fmt"
 	"stock-automation/internal/models"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -113,39 +116,76 @@ func GeneratePortfolioReport(summary *PortfolioSummary) string {
 	return report
 }
 
-// Helper function for string formatting
+// Helper function for string formatting - Japanese report formatting
 func sprintf(format string, args ...interface{}) string {
 	switch format {
 	case "現在価値: ¥%,.0f\n":
-		return "現在価値: ¥" + formatNumber(args[0].(float64)) + "\n"
+		return "現在価値: ¥" + formatCurrency(args[0].(float64)) + "\n"
 	case "投資元本: ¥%,.0f\n":
-		return "投資元本: ¥" + formatNumber(args[0].(float64)) + "\n"
+		return "投資元本: ¥" + formatCurrency(args[0].(float64)) + "\n"
 	case "損益: %s ¥%,.0f (%.2f%%)\n\n":
-		return "損益: " + args[0].(string) + " ¥" + formatNumber(args[1].(float64)) + " (" + formatFloat(args[2].(float64)) + "%)\n\n"
+		return "損益: " + args[0].(string) + " ¥" + formatCurrency(args[1].(float64)) + " (" + formatPercent(args[2].(float64)) + "%)\n\n"
 	case "%s %s (%s)\n":
 		return args[0].(string) + " " + args[1].(string) + " (" + args[2].(string) + ")\n"
 	case "  保有数: %d株 @ ¥%.0f\n":
-		return "  保有数: " + formatInt(args[0].(int)) + "株 @ ¥" + formatNumber(args[1].(float64)) + "\n"
+		return "  保有数: " + formatInt(args[0].(int)) + "株 @ ¥" + formatCurrency(args[1].(float64)) + "\n"
 	case "  現在価格: ¥%.0f\n":
-		return "  現在価格: ¥" + formatNumber(args[0].(float64)) + "\n"
+		return "  現在価格: ¥" + formatCurrency(args[0].(float64)) + "\n"
 	case "  損益: ¥%,.0f (%.2f%%)\n\n":
-		return "  損益: ¥" + formatNumber(args[0].(float64)) + " (" + formatFloat(args[1].(float64)) + "%)\n\n"
+		return "  損益: ¥" + formatCurrency(args[0].(float64)) + " (" + formatPercent(args[1].(float64)) + "%)\n\n"
 	default:
-		return format
+		// Fallback to standard fmt.Sprintf for unknown formats
+		return fmt.Sprintf(format, args...)
 	}
 }
 
-func formatNumber(f float64) string {
-	if f >= 0 {
-		return "+" + formatFloat(f)
+// formatCurrency formats a float64 as Japanese currency with comma separators
+func formatCurrency(f float64) string {
+	// Convert to string without decimals
+	str := fmt.Sprintf("%.0f", f)
+	
+	// Handle negative numbers
+	isNegative := false
+	if strings.HasPrefix(str, "-") {
+		isNegative = true
+		str = str[1:] // Remove the negative sign
 	}
-	return formatFloat(f)
+	
+	// Add comma separators
+	formatted := addCommaToNumber(str)
+	
+	// Add back negative sign if needed
+	if isNegative {
+		formatted = "-" + formatted
+	}
+	
+	return formatted
 }
 
-func formatFloat(f float64) string {
-	return "%.2f" // Placeholder
+// formatPercent formats a float64 as percentage with 2 decimal places
+func formatPercent(f float64) string {
+	return fmt.Sprintf("%.2f", f)
 }
 
+// formatInt formats an integer as string with comma separators
 func formatInt(i int) string {
-	return "%d" // Placeholder
+	return addCommaToNumber(strconv.Itoa(i))
+}
+
+// addCommaToNumber adds comma separators to a number string
+func addCommaToNumber(s string) string {
+	n := len(s)
+	if n <= 3 {
+		return s
+	}
+	
+	var result strings.Builder
+	for i, digit := range s {
+		if i > 0 && (n-i)%3 == 0 {
+			result.WriteString(",")
+		}
+		result.WriteRune(digit)
+	}
+	
+	return result.String()
 }

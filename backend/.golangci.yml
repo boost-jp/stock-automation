@@ -1,0 +1,338 @@
+# golangci-lint configuration for Stock Automation Backend
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+  build-tags:
+    - integration
+  skip-dirs:
+    - vendor
+    - pkg/mod
+    - gen
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*_test\\.go$"  # Skip test files for some linters
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  path-prefix: ""
+  sort-results: true
+
+linters-settings:
+  # Errcheck
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    ignore: fmt:.*,io/ioutil:^Read.*
+
+  # Govet
+  govet:
+    check-shadowing: true
+    enable-all: true
+    disable:
+      - fieldalignment
+
+  # Gofmt
+  gofmt:
+    simplify: true
+
+  # Goimports
+  goimports:
+    local-prefixes: stock-automation
+
+  # Golint
+  golint:
+    min-confidence: 0.8
+
+  # Goconst
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+
+  # Gocyclo
+  gocyclo:
+    min-complexity: 10
+
+  # Dupl
+  dupl:
+    threshold: 100
+
+  # Funlen
+  funlen:
+    lines: 60
+    statements: 40
+
+  # Gomnd (magic numbers)
+  gomnd:
+    settings:
+      mnd:
+        checks: argument,case,condition,operation,return,assign
+        ignored-numbers: 0,1,2,3,4,5,10,100,1000
+
+  # Godox
+  godox:
+    keywords:
+      - NOTE
+      - OPTIMIZE
+      - HACK
+      - TODO
+      - BUG
+      - FIXME
+
+  # Gomodguard
+  gomodguard:
+    blocked:
+      modules:
+        - github.com/golang/protobuf:
+            recommendations:
+              - google.golang.org/protobuf
+            reason: "see https://developers.google.com/protocol-buffers/docs/reference/go/faq#modules"
+
+  # Gosec
+  gosec:
+    severity: "low"
+    confidence: "low"
+    excludes:
+      - G204  # Subprocess launched with variable
+      - G301  # Poor file permissions used when creating a directory
+      - G302  # Poor file permissions used with chmod
+      - G304  # Potential file inclusion via variable
+
+  # Lll (line length)
+  lll:
+    line-length: 120
+
+  # Misspell
+  misspell:
+    locale: US
+    ignore-words:
+      - colour
+
+  # Nakedret
+  nakedret:
+    max-func-lines: 30
+
+  # Prealloc
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: false
+
+  # Unparam
+  unparam:
+    check-exported: false
+
+  # Unused
+  unused:
+    check-exported: false
+
+  # Whitespace
+  whitespace:
+    multi-if: false
+    multi-func: false
+
+  # Wsl
+  wsl:
+    strict-append: true
+    allow-assign-and-call: true
+    allow-multiline-assign: true
+    allow-cuddle-declarations: false
+    allow-trailing-comment: false
+    force-case-trailing-whitespace: 0
+    force-err-cuddling: false
+    allow-separated-leading-comment: false
+
+  # Nlreturn
+  nlreturn:
+    block-size: 1
+
+  # Gocritic
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+      - importShadow
+      - unnamedResult
+      - unnecessaryBlock
+
+linters:
+  enable:
+    # Default linters
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    
+    # Additional linters
+    - bodyclose
+    - contextcheck
+    - cyclop
+    - dupl
+    - durationcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gci
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - goerr113
+    - gofmt
+    - gofumpt
+    - goheader
+    - goimports
+    - golint
+    - gomnd
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - lll
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nolintlint
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - stylecheck
+    - tagliatelle
+    - tenv
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - wastedassign
+    - whitespace
+    - wrapcheck
+    - wsl
+
+  disable:
+    - asciicheck
+    - gochecknoglobals
+    - gomoddirectives
+    - interfacer
+    - maligned
+    - scopelint
+    - varcheck
+    - deadcode
+    - structcheck
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gomnd
+        - funlen
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - lll
+        - wsl
+        - nlreturn
+
+    # Exclude some linters from running on main.go
+    - path: cmd/main\.go
+      linters:
+        - gochecknoinits
+        - gocognit
+        - funlen
+
+    # Exclude some linters from running on generated files
+    - path: ".*\\.pb\\.go"
+      linters:
+        - errcheck
+        - gocyclo
+        - gofmt
+        - goimports
+        - golint
+        - gomnd
+        - govet
+        - lll
+        - misspell
+        - stylecheck
+        - unused
+
+    # Exclude some linters from running on mock files
+    - path: ".*mock.*\\.go"
+      linters:
+        - errcheck
+        - gomnd
+        - govet
+        - lll
+        - unused
+
+    # Exclude some specific rules
+    - text: "G104:"
+      linters:
+        - gosec
+    - text: "G204:"
+      linters:
+        - gosec
+    - text: "should have a package comment"
+      linters:
+        - golint
+    - text: "don't use an underscore in package name"
+      linters:
+        - golint
+    - text: "Line contains TODO/BUG/FIXME:"
+      linters:
+        - godox
+
+  exclude-use-default: false
+  max-issues-per-linter: 50
+  max-same-issues: 3
+  new: false
+  new-from-rev: ""
+  new-from-patch: ""
+  whole-files: false
+  fix: false
+
+severity:
+  default-severity: error
+  case-sensitive: false
+  rules:
+    - linters:
+        - dupl
+      severity: info
+    - linters:
+        - gocritic
+      severity: info
+    - linters:
+        - godox
+      severity: info
