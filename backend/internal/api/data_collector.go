@@ -113,8 +113,8 @@ func (dc *DataCollector) updateSinglePrice(stockCode, stockName string) error {
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"code": stockCode,
-		"name": stockName,
+		"code":  stockCode,
+		"name":  stockName,
 		"price": price.Price,
 	}).Debug("Stock price updated")
 	return nil

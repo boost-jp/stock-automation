@@ -53,7 +53,7 @@ func (dr *DailyReporter) GenerateAndSendDailyReport() error {
 		return err
 	}
 
-	logrus.Infof("Daily report sent: Total Value=¥%.0f, Gain=¥%.0f (%.2f%%)", 
+	logrus.Infof("Daily report sent: Total Value=¥%.0f, Gain=¥%.0f (%.2f%%)",
 		summary.TotalValue, summary.TotalGain, summary.TotalGainPercent)
 
 	return nil

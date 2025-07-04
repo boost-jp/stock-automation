@@ -333,8 +333,8 @@ func TestPortfolio_TotalValue(t *testing.T) {
 
 func TestPortfolio_PurchaseValue(t *testing.T) {
 	tests := []struct {
-		name                string
-		portfolio           Portfolio
+		name                  string
+		portfolio             Portfolio
 		expectedPurchaseValue float64
 	}{
 		{

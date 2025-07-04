@@ -10,12 +10,12 @@ import (
 
 func TestCalculatePortfolioSummary(t *testing.T) {
 	tests := []struct {
-		name           string
-		portfolio      []models.Portfolio
-		currentPrices  map[string]float64
-		expectedValue  float64
-		expectedCost   float64
-		expectedGain   float64
+		name                string
+		portfolio           []models.Portfolio
+		currentPrices       map[string]float64
+		expectedValue       float64
+		expectedCost        float64
+		expectedGain        float64
 		expectedGainPercent float64
 	}{
 		{
@@ -84,9 +84,9 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 			expectedGainPercent: 5.0,      // (10000 / 200000) * 100
 		},
 		{
-			name: "Empty portfolio",
-			portfolio: []models.Portfolio{},
-			currentPrices: map[string]float64{},
+			name:                "Empty portfolio",
+			portfolio:           []models.Portfolio{},
+			currentPrices:       map[string]float64{},
 			expectedValue:       0.0,
 			expectedCost:        0.0,
 			expectedGain:        0.0,
@@ -159,8 +159,8 @@ func TestCalculatePortfolioSummary_HoldingDetails(t *testing.T) {
 
 func TestGeneratePortfolioReport(t *testing.T) {
 	tests := []struct {
-		name           string
-		summary        *PortfolioSummary
+		name             string
+		summary          *PortfolioSummary
 		expectedContains []string
 	}{
 		{
@@ -263,54 +263,54 @@ func TestGeneratePortfolioReport(t *testing.T) {
 
 func TestHoldingSummaryCalculations(t *testing.T) {
 	tests := []struct {
-		name                string
-		shares              int
-		purchasePrice       float64
-		currentPrice        float64
+		name                 string
+		shares               int
+		purchasePrice        float64
+		currentPrice         float64
 		expectedCurrentValue float64
 		expectedPurchaseCost float64
-		expectedGain        float64
-		expectedGainPercent float64
+		expectedGain         float64
+		expectedGainPercent  float64
 	}{
 		{
-			name:                "Basic profit calculation",
-			shares:              100,
-			purchasePrice:       1000.0,
-			currentPrice:        1100.0,
+			name:                 "Basic profit calculation",
+			shares:               100,
+			purchasePrice:        1000.0,
+			currentPrice:         1100.0,
 			expectedCurrentValue: 110000.0,
 			expectedPurchaseCost: 100000.0,
-			expectedGain:        10000.0,
-			expectedGainPercent: 10.0,
+			expectedGain:         10000.0,
+			expectedGainPercent:  10.0,
 		},
 		{
-			name:                "Basic loss calculation",
-			shares:              50,
-			purchasePrice:       2000.0,
-			currentPrice:        1800.0,
+			name:                 "Basic loss calculation",
+			shares:               50,
+			purchasePrice:        2000.0,
+			currentPrice:         1800.0,
 			expectedCurrentValue: 90000.0,
 			expectedPurchaseCost: 100000.0,
-			expectedGain:        -10000.0,
-			expectedGainPercent: -10.0,
+			expectedGain:         -10000.0,
+			expectedGainPercent:  -10.0,
 		},
 		{
-			name:                "No change calculation",
-			shares:              200,
-			purchasePrice:       500.0,
-			currentPrice:        500.0,
+			name:                 "No change calculation",
+			shares:               200,
+			purchasePrice:        500.0,
+			currentPrice:         500.0,
 			expectedCurrentValue: 100000.0,
 			expectedPurchaseCost: 100000.0,
-			expectedGain:        0.0,
-			expectedGainPercent: 0.0,
+			expectedGain:         0.0,
+			expectedGainPercent:  0.0,
 		},
 		{
-			name:                "Fractional shares",
-			shares:              75,
-			purchasePrice:       1333.33,
-			currentPrice:        1400.0,
+			name:                 "Fractional shares",
+			shares:               75,
+			purchasePrice:        1333.33,
+			currentPrice:         1400.0,
 			expectedCurrentValue: 105000.0,
 			expectedPurchaseCost: 99999.75,
-			expectedGain:        5000.25,
-			expectedGainPercent: 5.0,
+			expectedGain:         5000.25,
+			expectedGainPercent:  5.0,
 		},
 	}
 

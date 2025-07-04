@@ -10,26 +10,26 @@ import (
 
 // PortfolioSummary represents portfolio performance summary
 type PortfolioSummary struct {
-	TotalValue      float64
-	TotalCost       float64
-	TotalGain       float64
+	TotalValue       float64
+	TotalCost        float64
+	TotalGain        float64
 	TotalGainPercent float64
-	Holdings        []HoldingSummary
-	UpdatedAt       time.Time
+	Holdings         []HoldingSummary
+	UpdatedAt        time.Time
 }
 
 // HoldingSummary represents individual holding performance
 type HoldingSummary struct {
-	Code            string
-	Name            string
-	Shares          int
-	CurrentPrice    float64
-	PurchasePrice   float64
-	CurrentValue    float64
-	PurchaseCost    float64
-	Gain            float64
-	GainPercent     float64
-	LastUpdated     time.Time
+	Code          string
+	Name          string
+	Shares        int
+	CurrentPrice  float64
+	PurchasePrice float64
+	CurrentValue  float64
+	PurchaseCost  float64
+	Gain          float64
+	GainPercent   float64
+	LastUpdated   time.Time
 }
 
 // CalculatePortfolioSummary calculates portfolio performance
@@ -38,18 +38,18 @@ func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[s
 		Holdings:  make([]HoldingSummary, 0),
 		UpdatedAt: time.Now(),
 	}
-	
+
 	for _, holding := range portfolio {
 		currentPrice, exists := currentPrices[holding.Code]
 		if !exists {
 			continue // Skip if no current price available
 		}
-		
+
 		currentValue := float64(holding.Shares) * currentPrice
 		purchaseCost := float64(holding.Shares) * holding.PurchasePrice
 		gain := currentValue - purchaseCost
 		gainPercent := (gain / purchaseCost) * 100
-		
+
 		holdingSummary := HoldingSummary{
 			Code:          holding.Code,
 			Name:          holding.Name,
@@ -62,17 +62,17 @@ func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[s
 			GainPercent:   gainPercent,
 			LastUpdated:   time.Now(),
 		}
-		
+
 		summary.Holdings = append(summary.Holdings, holdingSummary)
 		summary.TotalValue += currentValue
 		summary.TotalCost += purchaseCost
 	}
-	
+
 	summary.TotalGain = summary.TotalValue - summary.TotalCost
 	if summary.TotalCost > 0 {
 		summary.TotalGainPercent = (summary.TotalGain / summary.TotalCost) * 100
 	}
-	
+
 	return summary
 }
 
@@ -81,38 +81,38 @@ func GeneratePortfolioReport(summary *PortfolioSummary) string {
 	if len(summary.Holdings) == 0 {
 		return "ポートフォリオにデータがありません"
 	}
-	
+
 	report := "📊 ポートフォリオレポート\n\n"
-	
+
 	// 総資産状況
 	report += "💰 総資産状況\n"
 	report += "━━━━━━━━━━━━━━━━━━━━\n"
 	report += sprintf("現在価値: ¥%,.0f\n", summary.TotalValue)
 	report += sprintf("投資元本: ¥%,.0f\n", summary.TotalCost)
-	
+
 	gainIcon := "📈"
 	if summary.TotalGain < 0 {
 		gainIcon = "📉"
 	}
-	
+
 	report += sprintf("損益: %s ¥%,.0f (%.2f%%)\n\n", gainIcon, summary.TotalGain, summary.TotalGainPercent)
-	
+
 	// 個別銘柄
 	report += "📋 個別銘柄\n"
 	report += "━━━━━━━━━━━━━━━━━━━━\n"
-	
+
 	for _, holding := range summary.Holdings {
 		icon := "📈"
 		if holding.Gain < 0 {
 			icon = "📉"
 		}
-		
+
 		report += sprintf("%s %s (%s)\n", icon, holding.Name, holding.Code)
 		report += sprintf("  保有数: %d株 @ ¥%.0f\n", holding.Shares, holding.PurchasePrice)
 		report += sprintf("  現在価格: ¥%.0f\n", holding.CurrentPrice)
 		report += sprintf("  損益: ¥%,.0f (%.2f%%)\n\n", holding.Gain, holding.GainPercent)
 	}
-	
+
 	return report
 }
 
@@ -143,22 +143,22 @@ func sprintf(format string, args ...interface{}) string {
 func formatCurrency(f float64) string {
 	// Convert to string without decimals
 	str := fmt.Sprintf("%.0f", f)
-	
+
 	// Handle negative numbers
 	isNegative := false
 	if strings.HasPrefix(str, "-") {
 		isNegative = true
 		str = str[1:] // Remove the negative sign
 	}
-	
+
 	// Add comma separators
 	formatted := addCommaToNumber(str)
-	
+
 	// Add back negative sign if needed
 	if isNegative {
 		formatted = "-" + formatted
 	}
-	
+
 	return formatted
 }
 
@@ -178,7 +178,7 @@ func addCommaToNumber(s string) string {
 	if n <= 3 {
 		return s
 	}
-	
+
 	var result strings.Builder
 	for i, digit := range s {
 		if i > 0 && (n-i)%3 == 0 {
@@ -186,6 +186,6 @@ func addCommaToNumber(s string) string {
 		}
 		result.WriteRune(digit)
 	}
-	
+
 	return result.String()
 }

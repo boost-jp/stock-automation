@@ -22,17 +22,17 @@ type YahooFinanceResponse struct {
 	Chart struct {
 		Result []struct {
 			Meta struct {
-				Symbol                string  `json:"symbol"`
-				RegularMarketPrice    float64 `json:"regularMarketPrice"`
-				PreviousClose         float64 `json:"previousClose"`
-				RegularMarketOpen     float64 `json:"regularMarketOpen"`
-				RegularMarketDayLow   float64 `json:"regularMarketDayLow"`
-				RegularMarketDayHigh  float64 `json:"regularMarketDayHigh"`
-				RegularMarketVolume   int64   `json:"regularMarketVolume"`
-				Currency              string  `json:"currency"`
-				ExchangeName          string  `json:"exchangeName"`
+				Symbol               string  `json:"symbol"`
+				RegularMarketPrice   float64 `json:"regularMarketPrice"`
+				PreviousClose        float64 `json:"previousClose"`
+				RegularMarketOpen    float64 `json:"regularMarketOpen"`
+				RegularMarketDayLow  float64 `json:"regularMarketDayLow"`
+				RegularMarketDayHigh float64 `json:"regularMarketDayHigh"`
+				RegularMarketVolume  int64   `json:"regularMarketVolume"`
+				Currency             string  `json:"currency"`
+				ExchangeName         string  `json:"exchangeName"`
 			} `json:"meta"`
-			Timestamp []int64 `json:"timestamp"`
+			Timestamp  []int64 `json:"timestamp"`
 			Indicators struct {
 				Quote []struct {
 					Open   []float64 `json:"open"`
@@ -53,7 +53,7 @@ func NewYahooFinanceClient() *YahooFinanceClient {
 	client.SetRetryCount(3)
 	client.SetRetryWaitTime(1 * time.Second)
 	client.SetRetryMaxWaitTime(10 * time.Second)
-	
+
 	// Add exponential backoff for retries
 	client.AddRetryCondition(func(r *resty.Response, err error) bool {
 		return r.StatusCode() >= 500 || r.StatusCode() == 429
@@ -105,7 +105,7 @@ func (y *YahooFinanceClient) GetCurrentPrice(stockCode string) (*models.StockPri
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"code": stockCode,
+		"code":  stockCode,
 		"price": stockPrice.Price,
 	}).Debug("Yahoo Finance current price fetched")
 	return stockPrice, nil
@@ -141,27 +141,27 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 	}
 
 	result := response.Chart.Result[0]
-	
+
 	// Check for API errors
 	if response.Chart.Error != nil {
 		return nil, fmt.Errorf("Yahoo Finance API error for %s: %v", stockCode, response.Chart.Error)
 	}
-	
+
 	timestamps := result.Timestamp
 	if len(result.Indicators.Quote) == 0 {
 		return nil, fmt.Errorf("no quote indicators found for: %s", stockCode)
 	}
-	
+
 	quotes := result.Indicators.Quote[0]
 
 	var prices []models.StockPrice
 	for i, ts := range timestamps {
 		// Skip invalid or missing data points
-		if i >= len(quotes.Close) || i >= len(quotes.Open) || i >= len(quotes.High) || 
-		   i >= len(quotes.Low) || i >= len(quotes.Volume) {
+		if i >= len(quotes.Close) || i >= len(quotes.Open) || i >= len(quotes.High) ||
+			i >= len(quotes.Low) || i >= len(quotes.Volume) {
 			continue
 		}
-		
+
 		// Skip zero or negative prices (invalid data)
 		if quotes.Close[i] <= 0 || quotes.Open[i] <= 0 || quotes.High[i] <= 0 || quotes.Low[i] <= 0 {
 			continue
@@ -182,7 +182,7 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"code": stockCode,
+		"code":    stockCode,
 		"records": len(prices),
 	}).Debug("Yahoo Finance historical data fetched")
 	return prices, nil
