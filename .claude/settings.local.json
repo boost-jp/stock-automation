@@ -17,7 +17,8 @@
       "Bash(GOPATH=/Users/yuta.tasaka/boost/memo/repo/stock-automation go run test_db_charset.go)",
       "Bash(ls:*)",
       "Bash(/opt/homebrew/bin/go version)",
-      "Bash(timeout 10 /opt/homebrew/bin/go run cmd/main.go)"
+      "Bash(timeout 10 /opt/homebrew/bin/go run cmd/main.go)",
+      "Bash(git rev-list:*)"
     ],
     "deny": []
   }
