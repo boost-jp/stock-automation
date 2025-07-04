@@ -46,7 +46,10 @@
       "Bash(gh issue list:*)",
       "Bash(gh issue:*)",
       "Bash(gh pr merge:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge-base:*)",
+      "Bash(git merge:*)"
     ],
     "deny": []
   }
