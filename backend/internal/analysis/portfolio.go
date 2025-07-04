@@ -87,15 +87,15 @@ func GeneratePortfolioReport(summary *PortfolioSummary) string {
 	// 総資産状況
 	report += "💰 総資産状況\n"
 	report += "━━━━━━━━━━━━━━━━━━━━\n"
-	report += sprintf("現在価値: ¥%,.0f\n", summary.TotalValue)
-	report += sprintf("投資元本: ¥%,.0f\n", summary.TotalCost)
+	report += sprintf("現在価値: ¥%.0f\n", summary.TotalValue)
+	report += sprintf("投資元本: ¥%.0f\n", summary.TotalCost)
 
 	gainIcon := "📈"
 	if summary.TotalGain < 0 {
 		gainIcon = "📉"
 	}
 
-	report += sprintf("損益: %s ¥%,.0f (%.2f%%)\n\n", gainIcon, summary.TotalGain, summary.TotalGainPercent)
+	report += sprintf("損益: %s ¥%.0f (%.2f%%)\n\n", gainIcon, summary.TotalGain, summary.TotalGainPercent)
 
 	// 個別銘柄
 	report += "📋 個別銘柄\n"
@@ -110,7 +110,7 @@ func GeneratePortfolioReport(summary *PortfolioSummary) string {
 		report += sprintf("%s %s (%s)\n", icon, holding.Name, holding.Code)
 		report += sprintf("  保有数: %d株 @ ¥%.0f\n", holding.Shares, holding.PurchasePrice)
 		report += sprintf("  現在価格: ¥%.0f\n", holding.CurrentPrice)
-		report += sprintf("  損益: ¥%,.0f (%.2f%%)\n\n", holding.Gain, holding.GainPercent)
+		report += sprintf("  損益: ¥%.0f (%.2f%%)\n\n", holding.Gain, holding.GainPercent)
 	}
 
 	return report
@@ -119,11 +119,11 @@ func GeneratePortfolioReport(summary *PortfolioSummary) string {
 // Helper function for string formatting - Japanese report formatting
 func sprintf(format string, args ...interface{}) string {
 	switch format {
-	case "現在価値: ¥%,.0f\n":
+	case "現在価値: ¥%.0f\n":
 		return "現在価値: ¥" + formatCurrency(args[0].(float64)) + "\n"
-	case "投資元本: ¥%,.0f\n":
+	case "投資元本: ¥%.0f\n":
 		return "投資元本: ¥" + formatCurrency(args[0].(float64)) + "\n"
-	case "損益: %s ¥%,.0f (%.2f%%)\n\n":
+	case "損益: %s ¥%.0f (%.2f%%)\n\n":
 		return "損益: " + args[0].(string) + " ¥" + formatCurrency(args[1].(float64)) + " (" + formatPercent(args[2].(float64)) + "%)\n\n"
 	case "%s %s (%s)\n":
 		return args[0].(string) + " " + args[1].(string) + " (" + args[2].(string) + ")\n"
@@ -131,7 +131,7 @@ func sprintf(format string, args ...interface{}) string {
 		return "  保有数: " + formatInt(args[0].(int)) + "株 @ ¥" + formatCurrency(args[1].(float64)) + "\n"
 	case "  現在価格: ¥%.0f\n":
 		return "  現在価格: ¥" + formatCurrency(args[0].(float64)) + "\n"
-	case "  損益: ¥%,.0f (%.2f%%)\n\n":
+	case "  損益: ¥%.0f (%.2f%%)\n\n":
 		return "  損益: ¥" + formatCurrency(args[0].(float64)) + " (" + formatPercent(args[1].(float64)) + "%)\n\n"
 	default:
 		// Fallback to standard fmt.Sprintf for unknown formats
