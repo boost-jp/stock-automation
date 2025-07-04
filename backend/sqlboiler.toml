@@ -24,14 +24,10 @@ no-auto-timestamps = false
 struct-tag-casing = "snake"
 
 # Template settings
-templates = ["./templates/sqlboiler"]
+#templates = ["./templates/sqlboiler"]
 
 [imports.all]
   third_party = [
-  'models "github.com/boost-jp/adcast-backend/app/domain/models"',
-  'cerrors "github.com/boost-jp/adcast-backend/app/errors"',
-  'errors "github.com/boost-jp/adcast-backend/app/errors/boilerrors"',
-  '"github.com/volatiletech/sqlboiler/v4/drivers"',
   '"github.com/volatiletech/sqlboiler/v4/boil"',
   '"github.com/volatiletech/sqlboiler/v4/queries"',
   '"github.com/volatiletech/sqlboiler/v4/queries/qm"',
