@@ -56,6 +56,10 @@ func NewDB() (*DB, error) {
 	return &DB{conn: db}, nil
 }
 
+func (db *DB) GetDB() *gorm.DB {
+	return db.conn
+}
+
 func (db *DB) AutoMigrate() error {
 	return db.conn.AutoMigrate(
 		&models.StockPrice{},

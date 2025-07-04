@@ -150,13 +150,13 @@ func (bdc *BulkDataCollector) GetStockCodesForAnalysis() []string {
 
 func main() {
 	// Initialize database connection
-	db, err := database.InitDB()
+	db, err := database.NewDB()
 	if err != nil {
 		log.Fatal("データベース接続エラー:", err)
 	}
 
 	// Create bulk data collector
-	bulkCollector := NewBulkDataCollector(db)
+	bulkCollector := NewBulkDataCollector(db.GetDB())
 
 	// Get stock codes for analysis
 	stockCodes := bulkCollector.GetStockCodesForAnalysis()
