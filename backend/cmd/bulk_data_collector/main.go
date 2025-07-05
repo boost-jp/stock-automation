@@ -202,7 +202,6 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStock(ctx context.Context,
 	return nil
 }
 
-
 // getStockName returns the stock name for a given code.
 func (bdc *BulkDataCollector) getStockName(code string) string {
 	// Mapping of stock codes to names for major Japanese stocks
