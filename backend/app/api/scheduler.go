@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/notification"
@@ -16,7 +17,7 @@ type DataScheduler struct {
 
 func NewDataScheduler(collector *DataCollector, notifier *notification.SlackNotifier) *DataScheduler {
 	s := gocron.NewScheduler(time.UTC)
-	reporter := NewDailyReporter(collector.db, notifier)
+	reporter := NewDailyReporter(collector.repositories, notifier)
 
 	return &DataScheduler{
 		collector: collector,
@@ -55,7 +56,8 @@ func (ds *DataScheduler) StartScheduledCollection() {
 
 	// 毎日深夜のデータクリーンアップ
 	ds.scheduler.Every(1).Day().At("02:00").Do(func() {
-		if err := ds.collector.db.CleanupOldData(365); err != nil {
+		ctx := context.Background()
+		if err := ds.collector.repositories.Stock.CleanupOldData(ctx, 365); err != nil {
 			logrus.Error("Failed to cleanup old data:", err)
 		}
 	})
