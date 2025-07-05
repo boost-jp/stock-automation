@@ -1,11 +1,68 @@
 package client
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/domain/models"
 )
+
+func TestDefaultYahooFinanceConfig(t *testing.T) {
+	config := DefaultYahooFinanceConfig()
+
+	if config.BaseURL != "https://query1.finance.yahoo.com" {
+		t.Errorf("Expected base URL to be https://query1.finance.yahoo.com, got %s", config.BaseURL)
+	}
+	if config.Timeout != 30*time.Second {
+		t.Errorf("Expected timeout to be 30s, got %v", config.Timeout)
+	}
+	if config.RetryCount != 3 {
+		t.Errorf("Expected retry count to be 3, got %d", config.RetryCount)
+	}
+	if config.RateLimitRPS != 10 {
+		t.Errorf("Expected rate limit to be 10 RPS, got %d", config.RateLimitRPS)
+	}
+}
+
+func TestNewYahooFinanceClient(t *testing.T) {
+	client := NewYahooFinanceClient()
+
+	if client == nil {
+		t.Fatal("Expected non-nil client")
+	}
+	if client.client == nil {
+		t.Fatal("Expected non-nil HTTP client")
+	}
+	if client.rateLimiter == nil {
+		t.Fatal("Expected non-nil rate limiter")
+	}
+}
+
+func TestNewYahooFinanceClientWithConfig(t *testing.T) {
+	config := YahooFinanceConfig{
+		BaseURL:       "https://test.example.com",
+		Timeout:       10 * time.Second,
+		RetryCount:    5,
+		RetryWaitTime: 2 * time.Second,
+		RetryMaxWait:  20 * time.Second,
+		UserAgent:     "TestAgent/1.0",
+		RateLimitRPS:  5,
+	}
+
+	client := NewYahooFinanceClientWithConfig(config)
+
+	if client == nil {
+		t.Fatal("Expected non-nil client")
+	}
+	if client.baseURL != config.BaseURL {
+		t.Errorf("Expected base URL %s, got %s", config.BaseURL, client.baseURL)
+	}
+	if client.rateLimiter == nil {
+		t.Fatal("Expected non-nil rate limiter")
+	}
+}
 
 func TestYahooFinanceClient_Interface(t *testing.T) {
 	client := NewYahooFinanceClient()
@@ -23,6 +80,125 @@ func TestYahooFinanceClient_Interface(t *testing.T) {
 
 	if client.client == nil {
 		t.Error("HTTP client should be initialized")
+	}
+}
+
+func TestYahooFinanceClient_GetCurrentPrice_RateLimit(t *testing.T) {
+	// Create a test server that always returns success
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := `{
+			"chart": {
+				"result": [{
+					"meta": {
+						"symbol": "TEST",
+						"regularMarketPrice": 100.5,
+						"previousClose": 99.0,
+						"regularMarketOpen": 99.5,
+						"regularMarketDayLow": 98.0,
+						"regularMarketDayHigh": 101.0,
+						"regularMarketVolume": 1000000
+					}
+				}]
+			}
+		}`
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(response))
+	}))
+	defer server.Close()
+
+	config := YahooFinanceConfig{
+		BaseURL:       server.URL,
+		Timeout:       5 * time.Second,
+		RetryCount:    1,
+		RetryWaitTime: 100 * time.Millisecond,
+		RetryMaxWait:  500 * time.Millisecond,
+		RateLimitRPS:  2, // Low rate limit for testing
+	}
+
+	client := NewYahooFinanceClientWithConfig(config)
+
+	// Make rapid requests to test rate limiting
+	start := time.Now()
+	for i := 0; i < 3; i++ {
+		_, err := client.GetCurrentPrice("TEST")
+		if err != nil {
+			t.Errorf("GetCurrentPrice() error = %v", err)
+		}
+	}
+	elapsed := time.Since(start)
+
+	// With 2 RPS and 3 requests, at least one should be delayed
+	if elapsed < 400*time.Millisecond {
+		t.Errorf("Expected rate limiting to delay requests, but completed in %v", elapsed)
+	}
+}
+
+func TestYahooFinanceClient_GetCurrentPrice_HTTPErrors(t *testing.T) {
+	tests := []struct {
+		name       string
+		statusCode int
+		wantErr    bool
+		checkError func(error) bool
+	}{
+		{
+			name:       "404 Not Found",
+			statusCode: 404,
+			wantErr:    true,
+			checkError: func(err error) bool {
+				return err != nil && IsRetryableError(err) == false
+			},
+		},
+		{
+			name:       "429 Rate Limit",
+			statusCode: 429,
+			wantErr:    true,
+			checkError: func(err error) bool {
+				return err != nil && IsRetryableError(err) == true
+			},
+		},
+		{
+			name:       "500 Server Error",
+			statusCode: 500,
+			wantErr:    true,
+			checkError: func(err error) bool {
+				return err != nil && IsRetryableError(err) == true
+			},
+		},
+		{
+			name:       "503 Service Unavailable",
+			statusCode: 503,
+			wantErr:    true,
+			checkError: func(err error) bool {
+				return err != nil && IsRetryableError(err) == true
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.statusCode)
+			}))
+			defer server.Close()
+
+			config := YahooFinanceConfig{
+				BaseURL:       server.URL,
+				Timeout:       1 * time.Second,
+				RetryCount:    0, // Disable retries for predictable testing
+				RateLimitRPS:  10,
+			}
+
+			client := NewYahooFinanceClientWithConfig(config)
+			_, err := client.GetCurrentPrice("TEST")
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetCurrentPrice() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if tt.checkError != nil && !tt.checkError(err) {
+				t.Errorf("Error check failed for error: %v", err)
+			}
+		})
 	}
 }
 
