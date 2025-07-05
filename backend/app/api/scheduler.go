@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
 	"github.com/go-co-op/gocron"
 	"github.com/sirupsen/logrus"
 )
@@ -15,9 +14,8 @@ type DataScheduler struct {
 	reporter  *DailyReporter
 }
 
-func NewDataScheduler(collector *DataCollector, notifier notification.NotificationService) *DataScheduler {
+func NewDataScheduler(collector *DataCollector, reporter *DailyReporter) *DataScheduler {
 	s := gocron.NewScheduler(time.UTC)
-	reporter := NewDailyReporter(collector.repositories, notifier)
 
 	return &DataScheduler{
 		collector: collector,
@@ -57,7 +55,7 @@ func (ds *DataScheduler) StartScheduledCollection() {
 	// 毎日深夜のデータクリーンアップ
 	ds.scheduler.Every(1).Day().At("02:00").Do(func() {
 		ctx := context.Background()
-		if err := ds.collector.repositories.Stock.CleanupOldData(ctx, 365); err != nil {
+		if err := ds.collector.useCase.CleanupOldData(ctx, 365); err != nil {
 			logrus.Error("Failed to cleanup old data:", err)
 		}
 	})
