@@ -8,13 +8,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/aarondl/null/v8"
 	"github.com/aarondl/sqlboiler/v4/boil"
 	"github.com/aarondl/sqlboiler/v4/queries/qm"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/dao"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
-	"github.com/boost-jp/stock-automation/app/utils"
+	"github.com/boost-jp/stock-automation/app/utility"
 )
 
 // RunAddSamplePortfolio runs the add sample portfolio command.
@@ -44,7 +43,7 @@ func RunAddSamplePortfolio(connMgr database.ConnectionManager, args []string) {
 	// サンプルポートフォリオデータ
 	samplePortfolio := []dao.Portfolio{
 		{
-			ID:            utils.NewULID(),
+			ID:            utility.NewULID(),
 			Code:          "7203",
 			Name:          "トヨタ自動車",
 			Shares:        100,
@@ -52,7 +51,7 @@ func RunAddSamplePortfolio(connMgr database.ConnectionManager, args []string) {
 			PurchaseDate:  time.Now().AddDate(0, -2, 0), // 2ヶ月前
 		},
 		{
-			ID:            utils.NewULID(),
+			ID:            utility.NewULID(),
 			Code:          "6758",
 			Name:          "ソニーグループ",
 			Shares:        50,
@@ -60,7 +59,7 @@ func RunAddSamplePortfolio(connMgr database.ConnectionManager, args []string) {
 			PurchaseDate:  time.Now().AddDate(0, -1, -15), // 1ヶ月15日前
 		},
 		{
-			ID:            utils.NewULID(),
+			ID:            utility.NewULID(),
 			Code:          "9984",
 			Name:          "ソフトバンクグループ",
 			Shares:        80,
