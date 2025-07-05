@@ -255,4 +255,3 @@ func (tdb *TestDB) InsertTestWatchList(ctx context.Context, id, code, name strin
 	`
 	return tdb.ExecSQL(query, id, code, name, isActive)
 }
-
