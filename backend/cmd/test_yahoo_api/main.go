@@ -4,8 +4,8 @@
 package main
 
 import (
-	"log"
 	"github.com/boost-jp/stock-automation/internal/api"
+	"log"
 )
 
 func main() {

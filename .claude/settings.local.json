@@ -53,11 +53,12 @@
       "Bash(make:*)",
       "Bash(go install:*)",
       "Bash(sqlboiler:*)",
-           "Bash(/Users/yuta.tasaka/go/bin/sqlboiler mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional)",
+      "Bash(/Users/yuta.tasaka/go/bin/sqlboiler mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional)",
       "Bash(/Users/yuta.tasaka/go/bin/sqlboiler --no-driver-templates --templates templates/sqlboiler/main --templates templates/sqlboiler/additional mysql)",
       "Bash(go build:*)",
       "Bash(go fmt:*)",
-      "Bash(go vet:*)"
+      "Bash(go vet:*)",
+      "Bash(gh pr list:*)"
     ],
     "deny": []
   }

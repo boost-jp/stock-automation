@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
 	"github.com/boost-jp/stock-automation/internal/database"
 	"github.com/boost-jp/stock-automation/internal/models"
+	"log"
 	"time"
 )
 

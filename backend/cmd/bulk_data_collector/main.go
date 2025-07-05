@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"github.com/boost-jp/stock-automation/internal/api"
 	"github.com/boost-jp/stock-automation/internal/database"
 	"github.com/boost-jp/stock-automation/internal/models"
+	"log"
 	"sync"
 	"time"
 
