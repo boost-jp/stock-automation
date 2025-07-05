@@ -16,9 +16,6 @@ type CollectDataUseCase struct {
 	stockRepo     repository.StockRepository
 	portfolioRepo repository.PortfolioRepository
 	stockClient   client.StockDataClient
-	mu            sync.RWMutex
-	watchList     []*models.WatchList
-	portfolio     []*models.Portfolio
 }
 
 // NewCollectDataUseCase creates a new data collection use case.
@@ -34,43 +31,41 @@ func NewCollectDataUseCase(
 	}
 }
 
-// UpdateWatchList updates the watch list from database.
+// UpdateWatchList is kept for backward compatibility but now is a no-op.
+// Watch list is always fetched from database when needed.
 func (uc *CollectDataUseCase) UpdateWatchList(ctx context.Context) error {
-	watchList, err := uc.stockRepo.GetActiveWatchList(ctx)
-	if err != nil {
-		return err
-	}
-
-	uc.mu.Lock()
-	uc.watchList = watchList
-	uc.mu.Unlock()
-
-	logrus.Infof("Watch list updated: %d stocks", len(watchList))
+	// This is now a no-op as we fetch from DB on demand
+	logrus.Info("UpdateWatchList called - data will be fetched from DB on demand")
 	return nil
 }
 
-// UpdatePortfolio updates the portfolio from database.
+// UpdatePortfolio is kept for backward compatibility but now is a no-op.
+// Portfolio is always fetched from database when needed.
 func (uc *CollectDataUseCase) UpdatePortfolio(ctx context.Context) error {
-	portfolio, err := uc.portfolioRepo.GetAll(ctx)
-	if err != nil {
-		return err
-	}
-
-	uc.mu.Lock()
-	uc.portfolio = portfolio
-	uc.mu.Unlock()
-
-	logrus.Infof("Portfolio updated: %d holdings", len(portfolio))
+	// This is now a no-op as we fetch from DB on demand
+	logrus.Info("UpdatePortfolio called - data will be fetched from DB on demand")
 	return nil
 }
 
 // UpdateAllPrices updates prices for all watched stocks and portfolio.
 func (uc *CollectDataUseCase) UpdateAllPrices(ctx context.Context) error {
-	uc.mu.RLock()
-	watchList := uc.watchList
-	portfolio := uc.portfolio
-	uc.mu.RUnlock()
+	// Fetch watch list from database
+	watchList, err := uc.stockRepo.GetActiveWatchList(ctx)
+	if err != nil {
+		return err
+	}
 
+	// Fetch portfolio from database
+	portfolio, err := uc.portfolioRepo.GetAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	return uc.UpdatePricesForStocks(ctx, watchList, portfolio)
+}
+
+// UpdatePricesForStocks updates prices for specific watch list and portfolio items.
+func (uc *CollectDataUseCase) UpdatePricesForStocks(ctx context.Context, watchList []*models.WatchList, portfolio []*models.Portfolio) error {
 	// Collect all unique stock codes
 	stockCodes := make(map[string]bool)
 	for _, item := range watchList {
