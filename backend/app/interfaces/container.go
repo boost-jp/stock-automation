@@ -13,21 +13,21 @@ import (
 // Container holds all the dependencies for the application
 type Container struct {
 	// Infrastructure
-	config               *config.Config
-	connectionManager    database.ConnectionManager
-	transactionManager   repository.TransactionManager
-	stockRepository      repository.StockRepository
-	portfolioRepository  repository.PortfolioRepository
-	stockDataClient      client.StockDataClient
-	notificationService  notification.NotificationService
+	config              *config.Config
+	connectionManager   database.ConnectionManager
+	transactionManager  repository.TransactionManager
+	stockRepository     repository.StockRepository
+	portfolioRepository repository.PortfolioRepository
+	stockDataClient     client.StockDataClient
+	notificationService notification.NotificationService
 
 	// Domain Services
 	portfolioService         *domain.PortfolioService
 	technicalAnalysisService *domain.TechnicalAnalysisService
 
 	// Use Cases
-	collectDataUseCase     *usecase.CollectDataUseCase
-	portfolioReportUseCase *usecase.PortfolioReportUseCase
+	collectDataUseCase       *usecase.CollectDataUseCase
+	portfolioReportUseCase   *usecase.PortfolioReportUseCase
 	technicalAnalysisUseCase *usecase.TechnicalAnalysisUseCase
 
 	// Interface

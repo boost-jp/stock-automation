@@ -63,7 +63,7 @@ func main() {
 	// CLIインターフェースの実行
 	cli := interfaces.NewCLI(container)
 	args := append([]string{os.Args[0]}, flag.Args()...)
-	
+
 	if err := cli.Run(args); err != nil {
 		log.Fatalf("Error: %v", err)
 	}

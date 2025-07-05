@@ -93,8 +93,8 @@ func isMarketOpen() bool {
 	minute := now.Minute()
 	currentMinutes := hour*60 + minute
 
-	morningOpen := 9 * 60  // 9:00 AM
-	morningClose := 11*60 + 30 // 11:30 AM
+	morningOpen := 9 * 60       // 9:00 AM
+	morningClose := 11*60 + 30  // 11:30 AM
 	afternoonOpen := 12*60 + 30 // 12:30 PM
 	afternoonClose := 15 * 60   // 3:00 PM
 
