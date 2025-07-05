@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/api"
-	"github.com/boost-jp/stock-automation/app/database"
+	"github.com/boost-jp/stock-automation/app/infrastructure/database"
 	"github.com/boost-jp/stock-automation/app/notification"
+	"github.com/boost-jp/stock-automation/internal/repository"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,22 +24,22 @@ func main() {
 	})
 
 	// データベース接続
-	db, err := database.NewDB()
+	config := database.DefaultDatabaseConfig()
+	connMgr, err := database.NewConnectionManager(config)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	defer db.Close()
+	defer connMgr.Close()
 
-	// データベース初期化
-	if err := db.AutoMigrate(); err != nil {
-		log.Fatal("Failed to migrate database:", err)
-	}
+	// Repository層初期化
+	txMgr := repository.NewTransactionManager(connMgr.GetDB())
+	repos := txMgr.GetRepositories()
 
 	// 通知サービス初期化
 	notifier := notification.NewSlackNotifier()
 
 	// データコレクター初期化
-	collector := api.NewDataCollector(db)
+	collector := api.NewDataCollector(repos)
 
 	// 監視銘柄とポートフォリオの初期読み込み
 	if err := collector.UpdateWatchList(); err != nil {

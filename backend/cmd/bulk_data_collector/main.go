@@ -7,27 +7,26 @@ import (
 	"sync"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/api"
-	"github.com/boost-jp/stock-automation/app/database"
-	"github.com/boost-jp/stock-automation/app/domain/models"
-	"gorm.io/gorm"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
+	"github.com/boost-jp/stock-automation/app/infrastructure/database"
+	"github.com/boost-jp/stock-automation/internal/repository"
 )
 
 // BulkDataCollector handles bulk historical data collection for technical analysis.
 type BulkDataCollector struct {
-	db          *gorm.DB
-	yahooClient *api.YahooFinanceClient
-	maxRetries  int
-	maxWorkers  int
+	repositories *repository.Repositories
+	yahooClient  client.StockDataClient
+	maxRetries   int
+	maxWorkers   int
 }
 
 // NewBulkDataCollector creates a new bulk data collector.
-func NewBulkDataCollector(db *gorm.DB) *BulkDataCollector {
+func NewBulkDataCollector(repos *repository.Repositories) *BulkDataCollector {
 	return &BulkDataCollector{
-		db:          db,
-		yahooClient: api.NewYahooFinanceClient(),
-		maxRetries:  3,
-		maxWorkers:  3, // 並列度を3に制限（API制限を考慮）
+		repositories: repos,
+		yahooClient:  client.NewYahooFinanceClient(),
+		maxRetries:   3,
+		maxWorkers:   3, // 並列度を3に制限（API制限を考慮）
 	}
 }
 
@@ -41,12 +40,9 @@ func (bdc *BulkDataCollector) CollectHistoricalData(ctx context.Context, stockCo
 		log.Printf("📈 処理中 [%d/%d]: %s", i+1, len(stockCodes), code)
 
 		// Check if we already have recent data for this stock
-		var latestRecord models.StockPrice
-		err := bdc.db.Where("code = ?", code).Order("date DESC").First(&latestRecord).Error
-
+		latestRecord, err := bdc.repositories.Stock.GetLatestPrice(ctx, code)
 		if err == nil && latestRecord.Date.After(startDate) {
 			log.Printf("✅ %s: 既存データあり (最新: %s)", code, latestRecord.Date.Format("2006-01-02"))
-
 			continue
 		}
 
@@ -104,13 +100,10 @@ func (bdc *BulkDataCollector) CollectHistoricalDataParallel(ctx context.Context,
 			log.Printf("📈 処理開始: %s", stockCode)
 
 			// Check if we already have recent data for this stock
-			var latestRecord models.StockPrice
-			err := bdc.db.Where("code = ?", stockCode).Order("date DESC").First(&latestRecord).Error
-
+			latestRecord, err := bdc.repositories.Stock.GetLatestPrice(ctx, stockCode)
 			if err == nil && latestRecord.Date.After(startDate) {
 				log.Printf("✅ %s: 既存データあり (最新: %s)", stockCode, latestRecord.Date.Format("2006-01-02"))
 				results <- nil
-
 				return
 			}
 
@@ -196,66 +189,14 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStock(ctx context.Context,
 		return fmt.Errorf("failed to fetch historical data from Yahoo Finance: %w", err)
 	}
 
-	// Get stock name from the first record or set a default
-	stockName := fmt.Sprintf("Stock_%s", code)
+	// Save stock prices using repository
 	if len(stockPrices) > 0 {
-		// You might want to fetch the actual stock name from another API or maintain a mapping
-		stockName = bdc.getStockName(code)
-	}
-
-	// Set the stock name for all records and validate
-	validPrices := make([]models.StockPrice, 0)
-
-	for i := range stockPrices {
-		stockPrices[i].Name = stockName
-		// Validate the data
-		if stockPrices[i].IsValid() {
-			validPrices = append(validPrices, stockPrices[i])
-		} else {
-			log.Printf("⚠️  無効なデータをスキップ: %s at %s", code, stockPrices[i].Timestamp.Format("2006-01-02"))
-		}
-	}
-
-	// Batch upsert to database (insert or update on conflict)
-	if len(validPrices) > 0 {
-		err := bdc.upsertStockPrices(validPrices)
+		err := bdc.repositories.Stock.SaveStockPrices(ctx, stockPrices)
 		if err != nil {
-			return fmt.Errorf("failed to batch upsert stock prices: %w", err)
+			return fmt.Errorf("failed to save stock prices: %w", err)
 		}
 
-		log.Printf("💾 %s: %d件のデータを保存/更新しました", code, len(validPrices))
-	}
-
-	return nil
-}
-
-// upsertStockPrices performs batch upsert operation for stock prices.
-func (bdc *BulkDataCollector) upsertStockPrices(stockPrices []models.StockPrice) error {
-	// MySQL用のON DUPLICATE KEY UPDATE構文を使用
-	// 重複した場合（code + timestampの組み合わせ）は値を更新
-	batchSize := 100
-	for i := 0; i < len(stockPrices); i += batchSize {
-		end := i + batchSize
-		if end > len(stockPrices) {
-			end = len(stockPrices)
-		}
-
-		batch := stockPrices[i:end]
-
-		// Use Clauses for UPSERT operation
-		err := bdc.db.Clauses().CreateInBatches(batch, batchSize).Error
-		if err != nil {
-			// Fallback to individual upserts if batch fails
-			for _, price := range batch {
-				err = bdc.db.Where("code = ? AND DATE(date) = DATE(?)",
-					price.Code, price.Date).
-					Assign(price).
-					FirstOrCreate(&price).Error
-				if err != nil {
-					return fmt.Errorf("failed to upsert stock price for %s: %w", price.Code, err)
-				}
-			}
-		}
+		log.Printf("💾 %s: %d件のデータを保存/更新しました", code, len(stockPrices))
 	}
 
 	return nil
@@ -304,13 +245,19 @@ func (bdc *BulkDataCollector) GetStockCodesForAnalysis() []string {
 
 func main() {
 	// Initialize database connection
-	db, err := database.NewDB()
+	config := database.DefaultDatabaseConfig()
+	connMgr, err := database.NewConnectionManager(config)
 	if err != nil {
 		log.Fatal("データベース接続エラー:", err)
 	}
+	defer connMgr.Close()
+
+	// Create transaction manager and repositories
+	txMgr := repository.NewTransactionManager(connMgr.GetDB())
+	repos := txMgr.GetRepositories()
 
 	// Create bulk data collector
-	bulkCollector := NewBulkDataCollector(db.GetDB())
+	bulkCollector := NewBulkDataCollector(repos)
 
 	// Get stock codes for analysis
 	stockCodes := bulkCollector.GetStockCodesForAnalysis()

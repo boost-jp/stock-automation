@@ -4,25 +4,31 @@ import (
 	"log"
 
 	"github.com/boost-jp/stock-automation/app/api"
-	"github.com/boost-jp/stock-automation/app/database"
+	"github.com/boost-jp/stock-automation/app/infrastructure/database"
 	"github.com/boost-jp/stock-automation/app/notification"
+	"github.com/boost-jp/stock-automation/internal/repository"
 )
 
 func main() {
 	log.Println("📊 日次レポーター機能テスト開始")
 
 	// データベース接続
-	db, err := database.NewDB()
+	config := database.DefaultDatabaseConfig()
+	connMgr, err := database.NewConnectionManager(config)
 	if err != nil {
 		log.Fatal("データベース接続エラー:", err)
 	}
-	defer db.Close()
+	defer connMgr.Close()
+
+	// Repository層初期化
+	txMgr := repository.NewTransactionManager(connMgr.GetDB())
+	repos := txMgr.GetRepositories()
 
 	// 通知サービス初期化（テスト用にdummy notifierを使用）
 	notifier := notification.NewSlackNotifier()
 
 	// DailyReporter初期化
-	reporter := api.NewDailyReporter(db, notifier)
+	reporter := api.NewDailyReporter(repos, notifier)
 
 	// 1. ポートフォリオ統計取得テスト
 	log.Println("\n📈 ポートフォリオ統計取得テスト")

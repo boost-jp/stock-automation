@@ -35,7 +35,7 @@ type HoldingSummary struct {
 }
 
 // CalculatePortfolioSummary calculates portfolio performance.
-func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[string]float64) *PortfolioSummary {
+func CalculatePortfolioSummary(portfolio []*models.Portfolio, currentPrices map[string]float64) *PortfolioSummary {
 	summary := &PortfolioSummary{
 		Holdings:  make([]HoldingSummary, 0),
 		UpdatedAt: time.Now(),
