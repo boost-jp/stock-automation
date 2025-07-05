@@ -47,6 +47,20 @@ func NewSlackNotifier() *SlackNotifier {
 	}
 }
 
+// NewSlackNotificationService creates a new Slack notification service with explicit configuration
+func NewSlackNotificationService(webhookURL, channel, username string) NotificationService {
+	if webhookURL == "" {
+		logrus.Warn("Slack webhook URL not set")
+	}
+
+	return &SlackNotifier{
+		webhookURL: webhookURL,
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
 func (s *SlackNotifier) SendMessage(message string) error {
 	if s.webhookURL == "" {
 		logrus.Debug("Slack webhook URL not configured, skipping notification")
