@@ -15,6 +15,16 @@ help: ## Display help message
 	@echo "Available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
+# Install tools
+install-tools: ## Install required tools from tools workspace
+	@echo "Installing tools..."
+	@cd tools && go install github.com/aarondl/sqlboiler/v4
+	@cd tools && go install github.com/aarondl/sqlboiler/v4/drivers/sqlboiler-mysql
+	@cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	@cd tools && go install github.com/sqldef/sqldef/cmd/mysqldef
+	@cd tools && go install golang.org/x/tools/cmd/goimports
+	@echo "Tools installed successfully"
+
 # Build
 build: ## Build the application
 	@echo "Building application..."
@@ -37,10 +47,10 @@ test-coverage: ## Run tests with coverage
 	@go tool cover -html=$(COVERAGE_FILE) -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 
-test-integration: docker-up ## Run integration tests
+test-integration: docker-up test-db-migrate ## Run integration tests
 	@echo "Running integration tests..."
 	@sleep 10  # Wait for database to be ready
-	@go test -v -tags=integration ./...
+	@DB_NAME=$(TEST_DB_NAME) go test -v -tags=integration ./...
 
 test-all: test test-integration ## Run all tests
 
@@ -96,6 +106,7 @@ DB_PORT ?= 3309
 DB_USER ?= root
 DB_PASS ?= password
 DB_NAME ?= stock_automation
+TEST_DB_NAME ?= stock_automation_test
 
 db-setup: ## Create database if not exists
 	@echo "Creating database if not exists..."
@@ -103,9 +114,17 @@ db-setup: ## Create database if not exists
 
 db-migrate: ## Apply database schema using mysqldef
 	@echo "Applying database schema..."
-	@go run github.com/sqldef/sqldef/cmd/mysqldef@latest -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(DB_NAME) < schema.sql
+	@mysqldef -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(DB_NAME) < schema.sql
 
-sqlboiler-generate: ## Generate SQLBoiler models
+test-db-setup: ## Create test database if not exists
+	@echo "Creating test database if not exists..."
+	@docker exec stock-automation-mysql mysql -u$(DB_USER) -p$(DB_PASS) -e "CREATE DATABASE IF NOT EXISTS $(TEST_DB_NAME) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+test-db-migrate: test-db-setup ## Apply database schema to test database
+	@echo "Applying database schema to test database..."
+	@mysqldef -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(TEST_DB_NAME) < schema.sql
+
+gen-sqlboiler: ## Generate SQLBoiler models
 	@echo "Generating SQLBoiler models..."
 	@echo "Step 1: Generate DAO package..."
 	@rm -rf app/infrastructure/dao/*.go

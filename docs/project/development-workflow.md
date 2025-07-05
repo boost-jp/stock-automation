@@ -2,19 +2,6 @@
 
 ## 基本フロー
 
-```mermaid
-flowchart TD
-    A[アイデア・要求] --> B[GitHub Issue作成]
-    B --> C[機能ブランチ作成]
-    C --> D[実装]
-    D --> E[テスト・品質チェック]
-    E --> F[PR作成]
-    F --> G[CI確認]
-    G --> H[セルフレビュー]
-    H --> I[マージ]
-    I --> J[デプロイ・確認]
-```
-
 ## 1. タスク管理
 
 ### Issue作成ルール
@@ -23,6 +10,7 @@ flowchart TD
 - タイトル: [FEATURE] 機能概要
 - 何を・なぜ・どうやって を簡潔に記載
 - 受け入れ基準をチェックボックスで列挙
+- Issue Link: 
 
 # バグ報告  
 - タイトル: [BUG] 問題概要
@@ -68,7 +56,7 @@ git checkout -b feature/123-new-feature
 # 3. 品質チェック
 make test
 make lint
-make security
+make fmt
 
 # 4. PR作成
 git push origin feature/123-new-feature
@@ -77,45 +65,8 @@ git push origin feature/123-new-feature
 
 ## 3. コーディング規約（要点）
 
-### Go規約
-```go
-// パッケージ・ファイル構成
-app/
-├── models/      # データモデル
-├── services/    # ビジネスロジック  
-├── api/         # HTTPハンドラー
-└── repository/  # データアクセス
+docs/dev/*.mdを参照
 
-// 命名規則
-type StockPrice struct {}     // PascalCase
-func GetStock() {}            // PascalCase
-var stockCode string          // camelCase
-
-// エラーハンドリング
-if err != nil {
-    return fmt.Errorf("failed to get stock: %w", err)
-}
-
-// ログ
-logrus.WithFields(logrus.Fields{
-    "code": stockCode,
-    "action": "fetch",
-}).Info("stock price updated")
-```
-
-### API規約
-```go
-// RESTful設計
-GET    /api/v1/stocks/{code}        # 取得
-POST   /api/v1/stocks              # 作成
-PUT    /api/v1/stocks/{code}       # 更新
-DELETE /api/v1/stocks/{code}       # 削除
-
-// レスポンス形式
-{
-    "data": {...},           // 成功時
-    "error": "message"       // エラー時
-}
 ```
 
 ## 4. テスト戦略（簡略版）
@@ -131,26 +82,6 @@ make test-integration
 # 手動テスト（受け入れ基準確認）
 ```
 
-### テストファイル例
-```go
-func TestStockService_GetStock(t *testing.T) {
-    // 正常ケース・エラーケースの基本パターンのみ
-    tests := []struct {
-        name string
-        code string
-        want *Stock
-        err  error
-    }{
-        {"正常", "1234", expectedStock, nil},
-        {"未発見", "9999", nil, ErrNotFound},
-    }
-    
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            // テスト実行
-        })
-    }
-}
 ```
 
 ## 5. PR・レビュープロセス

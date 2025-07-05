@@ -1,61 +1,25 @@
-# Claude Development Notes
+# Claude 開発ノート
 
-## Project Rules & Conventions
+このプロジェクトの開発に関する規約とガイドラインです。
 
-### R2 Domain Layer Implementation Rules
+## 関連ドキュメント
 
-1. **Testing Framework**: Use `github.com/google/go-cmp/cmp` instead of `assert` for test comparisons
-   - Use `cmp.Diff()` for detailed comparison output
-   - Format error messages as: `(-want +got):\n%s`
-   - Example: `if diff := cmp.Diff(expected, actual); diff != "" { t.Errorf("mismatch (-want +got):\n%s", diff) }`
+- [コーディングルール](./docs/dev/coding-rules.md) - アーキテクチャ、実装ルール、テスト戦略
 
-2. **Domain Layer Structure**: 
-   - Use SQLBoiler-generated models from `app/domain/models/`
-   - Create domain services in `app/domain/` that use these models
-   - Services should be stateless with constructor functions like `NewPortfolioService()`
+## 開発ワークフロー
 
-3. **Type Conversions**:
-   - Use simplified decimal conversions for now: `types.NullDecimal{}`
-   - Domain services handle `types.Decimal` to `float64` conversions
-   - Placeholder implementations are acceptable for complex decimal operations
-
-4. **Test Coverage**:
-   - Create comprehensive test files for each service: `*_service_test.go`
-   - Test service creation, core business logic, validation, edge cases
-   - Use table-driven tests for multiple scenarios
-   - Include helper functions for test data creation
-
-5. **Code Quality Before CI**:
-   - Run `go mod tidy` to update dependencies
-   - Run `go fmt` to format code
-   - Run `go build` or `go test -c` to verify compilation
-   - Add required dependencies to go.mod (like go-cmp)
-
-6. **Import Management**:
-   - Replace `interface{}` with `any` for modern Go
-   - Remove unused imports (like cmpopts if not used)
-   - Add necessary imports for testing dependencies
-
-## Development Workflow
-
-1. Create domain services from existing analysis logic
-2. Write comprehensive tests using cmp.Diff
-3. Update go.mod with required dependencies
-4. **Pre-PR Validation**:
-   - Run `make test` to verify tests pass
-   - Run `make lint` to format code but ignore error
-   - Run `make fmt` to format code
-   - Only create PR if local tests pass
-5. **CI Workflow**:
-   - Create PR and push changes
-   - Poll CI status until completion
-   - If CI fails, fix issues and repeat
-   - Wait for CI to pass before considering PR ready
-6. Document new patterns and rules in CLAUDE.md
-
-## SQLBoiler Integration
-
-- Generated models are in `app/domain/models/`
-- Use `types.Decimal` and `types.NullDecimal` for price fields
-- Convert between domain types and SQLBoiler types as needed
-- Services act as adapters between domain logic and generated models
+1. 既存の分析ロジックからドメインサービスを作成
+2. cmp.Diffを使用した包括的なテストを記述
+3. go.modに必要な依存関係を更新
+4. **PR前の検証**:
+   - `make test` を実行してテストが通ることを確認
+   - `make lint` を実行してコードをフォーマット（エラーは無視）
+   - `make fmt` を実行してコードをフォーマット
+   - ローカルテストが通る場合のみPRを作成
+5. **CIワークフロー**:
+   - PRを作成して変更をプッシュ。概要は日本語で記述
+   - CI完了までステータスをポーリング
+   - CIが失敗した場合、問題を修正して再実行
+   - コメントがあれば対応する
+   - PRが準備完了とみなす前にCIが通るまで待機
+6. 新しいパターンやルールをCLAUDE.mdに文書化
