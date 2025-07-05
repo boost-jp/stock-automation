@@ -194,4 +194,3 @@ func (s *PortfolioService) CalculateHoldingValue(portfolio *models.Portfolio, cu
 func (s *PortfolioService) CalculateHoldingReturn(portfolio *models.Portfolio, currentPrice float64) float64 {
 	return portfolio.CalculateGainPercent(currentPrice)
 }
-

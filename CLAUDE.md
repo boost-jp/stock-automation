@@ -42,8 +42,9 @@
 2. Write comprehensive tests using cmp.Diff
 3. Update go.mod with required dependencies
 4. **Pre-PR Validation**:
-   - Run `go test` to verify tests pass
-   - Run `go fmt` to format code
+   - Run `make test` to verify tests pass
+   - Run `make lint` to format code but ignore error
+   - Run `make fmt` to format code
    - Only create PR if local tests pass
 5. **CI Workflow**:
    - Create PR and push changes
