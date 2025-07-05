@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/analysis"
+	"github.com/boost-jp/stock-automation/app/domain"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
 	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
@@ -62,7 +62,7 @@ func (uc *PortfolioReportUseCase) GenerateAndSendDailyReport(ctx context.Context
 	}
 
 	// Calculate portfolio summary
-	summary := analysis.CalculatePortfolioSummary(portfolio, currentPrices)
+	summary := domain.CalculatePortfolioSummary(portfolio, currentPrices)
 
 	// Send notification
 	if err := uc.notifier.SendDailyReport(summary.TotalValue, summary.TotalGain, summary.TotalGainPercent); err != nil {
@@ -75,7 +75,7 @@ func (uc *PortfolioReportUseCase) GenerateAndSendDailyReport(ctx context.Context
 	return nil
 }
 
-// SendPortfolioAnalysis sends detailed portfolio analysis.
+// SendPortfolioAnalysis sends detailed portfolio domain.
 func (uc *PortfolioReportUseCase) SendPortfolioAnalysis(ctx context.Context) error {
 	// Get portfolio
 	portfolio, err := uc.portfolioRepo.GetAll(ctx)
@@ -94,8 +94,8 @@ func (uc *PortfolioReportUseCase) SendPortfolioAnalysis(ctx context.Context) err
 	}
 
 	// Generate detailed report
-	summary := analysis.CalculatePortfolioSummary(portfolio, currentPrices)
-	report := analysis.GeneratePortfolioReport(summary)
+	summary := domain.CalculatePortfolioSummary(portfolio, currentPrices)
+	report := domain.GeneratePortfolioReport(summary)
 
 	// Send via notification
 	return uc.notifier.SendMessage(report)
@@ -131,8 +131,8 @@ func (uc *PortfolioReportUseCase) GenerateComprehensiveDailyReport(ctx context.C
 	}
 
 	// Generate report
-	summary := analysis.CalculatePortfolioSummary(portfolio, currentPrices)
-	report := analysis.GeneratePortfolioReport(summary)
+	summary := domain.CalculatePortfolioSummary(portfolio, currentPrices)
+	report := domain.GeneratePortfolioReport(summary)
 
 	// Add errors if any
 	if len(priceErrors) > 0 {
@@ -165,7 +165,7 @@ func (uc *PortfolioReportUseCase) SendComprehensiveDailyReport(ctx context.Conte
 }
 
 // GetPortfolioStatistics returns detailed portfolio statistics.
-func (uc *PortfolioReportUseCase) GetPortfolioStatistics(ctx context.Context) (*analysis.PortfolioSummary, error) {
+func (uc *PortfolioReportUseCase) GetPortfolioStatistics(ctx context.Context) (*domain.PortfolioSummary, error) {
 	// Get portfolio
 	portfolio, err := uc.portfolioRepo.GetAll(ctx)
 	if err != nil {
@@ -173,7 +173,7 @@ func (uc *PortfolioReportUseCase) GetPortfolioStatistics(ctx context.Context) (*
 	}
 
 	if len(portfolio) == 0 {
-		return &analysis.PortfolioSummary{}, nil
+		return &domain.PortfolioSummary{}, nil
 	}
 
 	// Get current prices
@@ -188,6 +188,6 @@ func (uc *PortfolioReportUseCase) GetPortfolioStatistics(ctx context.Context) (*
 	}
 
 	// Calculate statistics
-	summary := analysis.CalculatePortfolioSummary(portfolio, currentPrices)
+	summary := domain.CalculatePortfolioSummary(portfolio, currentPrices)
 	return summary, nil
 }

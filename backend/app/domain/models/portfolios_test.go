@@ -1,11 +1,22 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/aarondl/sqlboiler/v4/types"
+	"github.com/ericlagergren/decimal"
 	"github.com/google/go-cmp/cmp"
 )
+
+// floatToDecimal converts float64 to types.Decimal for testing
+func floatToDecimal(value float64) types.Decimal {
+	decimalStr := fmt.Sprintf("%.6f", value)
+	d := new(decimal.Big)
+	d.SetString(decimalStr)
+	return types.Decimal{Big: d}
+}
 
 func TestPortfolio_CalculateCurrentValue(t *testing.T) {
 	portfolio := &Portfolio{
@@ -48,10 +59,10 @@ func TestPortfolio_CalculateCurrentValue(t *testing.T) {
 
 func TestPortfolio_CalculatePurchaseCost(t *testing.T) {
 	portfolio := &Portfolio{
-		Code:   "1234",
-		Name:   "Test Stock",
-		Shares: 100,
-		// PurchasePrice will return 1000.0 from GetPurchasePrice()
+		Code:          "1234",
+		Name:          "Test Stock",
+		Shares:        100,
+		PurchasePrice: floatToDecimal(1000.0),
 	}
 
 	expected := 100000.0 // 100 shares * 1000.0 price
@@ -64,9 +75,10 @@ func TestPortfolio_CalculatePurchaseCost(t *testing.T) {
 
 func TestPortfolio_CalculateGain(t *testing.T) {
 	portfolio := &Portfolio{
-		Code:   "1234",
-		Name:   "Test Stock",
-		Shares: 100,
+		Code:          "1234",
+		Name:          "Test Stock",
+		Shares:        100,
+		PurchasePrice: floatToDecimal(1000.0),
 	}
 
 	tests := []struct {
@@ -103,9 +115,10 @@ func TestPortfolio_CalculateGain(t *testing.T) {
 
 func TestPortfolio_CalculateGainPercent(t *testing.T) {
 	portfolio := &Portfolio{
-		Code:   "1234",
-		Name:   "Test Stock",
-		Shares: 100,
+		Code:          "1234",
+		Name:          "Test Stock",
+		Shares:        100,
+		PurchasePrice: floatToDecimal(1000.0),
 	}
 
 	tests := []struct {
@@ -154,50 +167,55 @@ func TestPortfolio_Validate(t *testing.T) {
 		{
 			name: "Valid portfolio",
 			portfolio: &Portfolio{
-				Code:         "1234",
-				Name:         "Test Stock",
-				Shares:       100,
-				PurchaseDate: time.Now(),
+				Code:          "1234",
+				Name:          "Test Stock",
+				Shares:        100,
+				PurchasePrice: floatToDecimal(1000.0),
+				PurchaseDate:  time.Now(),
 			},
 			wantError: false,
 		},
 		{
 			name: "Empty code",
 			portfolio: &Portfolio{
-				Code:         "",
-				Name:         "Test Stock",
-				Shares:       100,
-				PurchaseDate: time.Now(),
+				Code:          "",
+				Name:          "Test Stock",
+				Shares:        100,
+				PurchasePrice: floatToDecimal(1000.0),
+				PurchaseDate:  time.Now(),
 			},
 			wantError: true,
 		},
 		{
 			name: "Empty name",
 			portfolio: &Portfolio{
-				Code:         "1234",
-				Name:         "",
-				Shares:       100,
-				PurchaseDate: time.Now(),
+				Code:          "1234",
+				Name:          "",
+				Shares:        100,
+				PurchasePrice: floatToDecimal(1000.0),
+				PurchaseDate:  time.Now(),
 			},
 			wantError: true,
 		},
 		{
 			name: "Zero shares",
 			portfolio: &Portfolio{
-				Code:         "1234",
-				Name:         "Test Stock",
-				Shares:       0,
-				PurchaseDate: time.Now(),
+				Code:          "1234",
+				Name:          "Test Stock",
+				Shares:        0,
+				PurchasePrice: floatToDecimal(1000.0),
+				PurchaseDate:  time.Now(),
 			},
 			wantError: true,
 		},
 		{
 			name: "Negative shares",
 			portfolio: &Portfolio{
-				Code:         "1234",
-				Name:         "Test Stock",
-				Shares:       -100,
-				PurchaseDate: time.Now(),
+				Code:          "1234",
+				Name:          "Test Stock",
+				Shares:        -100,
+				PurchasePrice: floatToDecimal(1000.0),
+				PurchaseDate:  time.Now(),
 			},
 			wantError: true,
 		},
