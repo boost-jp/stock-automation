@@ -236,6 +236,7 @@ func (m *mockStockDataClientWithHistory) GetCurrentPrice(stockCode string) (*mod
 	}
 
 	return &models.StockPrice{
+		ID:         fmt.Sprintf("current-%s-%d", stockCode, time.Now().Unix()),
 		Code:       stockCode,
 		Date:       time.Now(),
 		OpenPrice:  client.FloatToDecimal(price * 0.99),
@@ -279,6 +280,7 @@ func (r *rateLimitTestClient) GetCurrentPrice(stockCode string) (*models.StockPr
 	r.mu.Unlock()
 
 	return &models.StockPrice{
+		ID:         fmt.Sprintf("ratelimit-%s-%d", stockCode, time.Now().UnixNano()),
 		Code:       stockCode,
 		Date:       time.Now(),
 		ClosePrice: client.FloatToDecimal(1000.0),
@@ -286,6 +288,8 @@ func (r *rateLimitTestClient) GetCurrentPrice(stockCode string) (*models.StockPr
 		HighPrice:  client.FloatToDecimal(1000.0),
 		LowPrice:   client.FloatToDecimal(1000.0),
 		Volume:     1000000,
+		CreatedAt:  fixture.NullTimeFrom(time.Now()),
+		UpdatedAt:  fixture.NullTimeFrom(time.Now()),
 	}, nil
 }
 
