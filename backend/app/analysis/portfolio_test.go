@@ -13,7 +13,7 @@ import (
 func TestCalculatePortfolioSummary(t *testing.T) {
 	tests := []struct {
 		name                string
-		portfolio           []models.Portfolio
+		portfolio           []*models.Portfolio
 		currentPrices       map[string]float64
 		expectedValue       float64
 		expectedCost        float64
@@ -22,8 +22,8 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 	}{
 		{
 			name: "Single holding with profit",
-			portfolio: []models.Portfolio{
-				{
+			portfolio: []*models.Portfolio{
+				&models.Portfolio{
 					Code:          "1234",
 					Name:          "Test Stock",
 					Shares:        100,
@@ -41,8 +41,8 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 		},
 		{
 			name: "Single holding with loss",
-			portfolio: []models.Portfolio{
-				{
+			portfolio: []*models.Portfolio{
+				&models.Portfolio{
 					Code:          "5678",
 					Name:          "Test Stock 2",
 					Shares:        50,
@@ -60,15 +60,15 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 		},
 		{
 			name: "Multiple holdings mixed performance",
-			portfolio: []models.Portfolio{
-				{
+			portfolio: []*models.Portfolio{
+				&models.Portfolio{
 					Code:          "1234",
 					Name:          "Test Stock 1",
 					Shares:        100,
 					PurchasePrice: client.FloatToDecimal(1000.0),
 					PurchaseDate:  time.Now(),
 				},
-				{
+				&models.Portfolio{
 					Code:          "5678",
 					Name:          "Test Stock 2",
 					Shares:        50,
@@ -87,7 +87,7 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 		},
 		{
 			name:                "Empty portfolio",
-			portfolio:           []models.Portfolio{},
+			portfolio:           []*models.Portfolio{},
 			currentPrices:       map[string]float64{},
 			expectedValue:       0.0,
 			expectedCost:        0.0,
@@ -96,8 +96,8 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 		},
 		{
 			name: "Portfolio with missing price data",
-			portfolio: []models.Portfolio{
-				{
+			portfolio: []*models.Portfolio{
+				&models.Portfolio{
 					Code:          "1234",
 					Name:          "Test Stock",
 					Shares:        100,
@@ -129,12 +129,12 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 }
 
 func TestCalculatePortfolioSummary_HoldingDetails(t *testing.T) {
-	portfolio := []models.Portfolio{
-		{
+	portfolio := []*models.Portfolio{
+		&models.Portfolio{
 			Code:          "1234",
 			Name:          "Test Stock",
 			Shares:        100,
-			PurchasePrice: 1000.0,
+			PurchasePrice: client.FloatToDecimal(1000.0),
 			PurchaseDate:  time.Now(),
 		},
 	}
@@ -318,12 +318,12 @@ func TestHoldingSummaryCalculations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			portfolio := []models.Portfolio{
-				{
+			portfolio := []*models.Portfolio{
+				&models.Portfolio{
 					Code:          "TEST",
 					Name:          "Test Stock",
 					Shares:        tt.shares,
-					PurchasePrice: tt.purchasePrice,
+					PurchasePrice: client.FloatToDecimal(tt.purchasePrice),
 					PurchaseDate:  time.Now(),
 				},
 			}
@@ -346,12 +346,12 @@ func TestHoldingSummaryCalculations(t *testing.T) {
 
 func TestPortfolioSummaryEdgeCases(t *testing.T) {
 	t.Run("Zero cost portfolio", func(t *testing.T) {
-		portfolio := []models.Portfolio{
-			{
+		portfolio := []*models.Portfolio{
+			&models.Portfolio{
 				Code:          "FREE",
 				Name:          "Free Stock",
 				Shares:        100,
-				PurchasePrice: 0.0, // Free stock
+				PurchasePrice: client.FloatToDecimal(0.0), // Free stock
 				PurchaseDate:  time.Now(),
 			},
 		}
@@ -368,8 +368,8 @@ func TestPortfolioSummaryEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Negative price scenario", func(t *testing.T) {
-		portfolio := []models.Portfolio{
-			{
+		portfolio := []*models.Portfolio{
+			&models.Portfolio{
 				Code:          "NEG",
 				Name:          "Negative Stock",
 				Shares:        100,

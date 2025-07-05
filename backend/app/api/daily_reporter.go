@@ -1,32 +1,37 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/analysis"
-	"github.com/boost-jp/stock-automation/app/database"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/notification"
+	"github.com/boost-jp/stock-automation/internal/repository"
 	"github.com/sirupsen/logrus"
 )
 
 type DailyReporter struct {
-	db       *database.DB
-	notifier *notification.SlackNotifier
+	repositories *repository.Repositories
+	stockClient  client.StockDataClient
+	notifier     *notification.SlackNotifier
 }
 
-func NewDailyReporter(db *database.DB, notifier *notification.SlackNotifier) *DailyReporter {
+func NewDailyReporter(repos *repository.Repositories, notifier *notification.SlackNotifier) *DailyReporter {
 	return &DailyReporter{
-		db:       db,
-		notifier: notifier,
+		repositories: repos,
+		stockClient:  client.NewYahooFinanceClient(),
+		notifier:     notifier,
 	}
 }
 
 func (dr *DailyReporter) GenerateAndSendDailyReport() error {
 	logrus.Info("Generating daily portfolio report...")
 
+	ctx := context.Background()
 	// ポートフォリオ取得
-	portfolio, err := dr.db.GetPortfolio()
+	portfolio, err := dr.repositories.Portfolio.GetAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -41,14 +46,14 @@ func (dr *DailyReporter) GenerateAndSendDailyReport() error {
 	currentPrices := make(map[string]float64)
 
 	for _, holding := range portfolio {
-		price, err := dr.db.GetLatestPrice(holding.Code)
+		price, err := dr.repositories.Stock.GetLatestPrice(ctx, holding.Code)
 		if err != nil {
 			logrus.Warnf("Failed to get price for %s: %v", holding.Code, err)
 
 			continue
 		}
 
-		currentPrices[holding.Code] = price.Price
+		currentPrices[holding.Code] = client.DecimalToFloat(price.ClosePrice)
 	}
 
 	// ポートフォリオサマリー計算
@@ -66,8 +71,9 @@ func (dr *DailyReporter) GenerateAndSendDailyReport() error {
 }
 
 func (dr *DailyReporter) SendPortfolioAnalysis() error {
+	ctx := context.Background()
 	// ポートフォリオ取得
-	portfolio, err := dr.db.GetPortfolio()
+	portfolio, err := dr.repositories.Portfolio.GetAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -76,12 +82,12 @@ func (dr *DailyReporter) SendPortfolioAnalysis() error {
 	currentPrices := make(map[string]float64)
 
 	for _, holding := range portfolio {
-		price, err := dr.db.GetLatestPrice(holding.Code)
+		price, err := dr.repositories.Stock.GetLatestPrice(ctx, holding.Code)
 		if err != nil {
 			continue
 		}
 
-		currentPrices[holding.Code] = price.Price
+		currentPrices[holding.Code] = client.DecimalToFloat(price.ClosePrice)
 	}
 
 	// 詳細レポート生成
@@ -96,8 +102,9 @@ func (dr *DailyReporter) SendPortfolioAnalysis() error {
 func (dr *DailyReporter) GenerateComprehensiveDailyReport() (string, error) {
 	logrus.Info("Generating comprehensive daily portfolio report...")
 
+	ctx := context.Background()
 	// ポートフォリオ取得
-	portfolio, err := dr.db.GetPortfolio()
+	portfolio, err := dr.repositories.Portfolio.GetAll(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to get portfolio: %w", err)
 	}
@@ -112,7 +119,7 @@ func (dr *DailyReporter) GenerateComprehensiveDailyReport() (string, error) {
 	var priceErrors []string
 
 	for _, holding := range portfolio {
-		price, err := dr.db.GetLatestPrice(holding.Code)
+		price, err := dr.repositories.Stock.GetLatestPrice(ctx, holding.Code)
 		if err != nil {
 			errorMsg := fmt.Sprintf("%s (%s): 価格取得エラー", holding.Name, holding.Code)
 			priceErrors = append(priceErrors, errorMsg)
@@ -122,7 +129,7 @@ func (dr *DailyReporter) GenerateComprehensiveDailyReport() (string, error) {
 			continue
 		}
 
-		currentPrices[holding.Code] = price.Price
+		currentPrices[holding.Code] = client.DecimalToFloat(price.ClosePrice)
 	}
 
 	// レポート生成
@@ -162,8 +169,9 @@ func (dr *DailyReporter) SendComprehensiveDailyReport() error {
 
 // GetPortfolioStatistics returns detailed portfolio statistics.
 func (dr *DailyReporter) GetPortfolioStatistics() (*analysis.PortfolioSummary, error) {
+	ctx := context.Background()
 	// ポートフォリオ取得
-	portfolio, err := dr.db.GetPortfolio()
+	portfolio, err := dr.repositories.Portfolio.GetAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get portfolio: %w", err)
 	}
@@ -176,14 +184,14 @@ func (dr *DailyReporter) GetPortfolioStatistics() (*analysis.PortfolioSummary, e
 	currentPrices := make(map[string]float64)
 
 	for _, holding := range portfolio {
-		price, err := dr.db.GetLatestPrice(holding.Code)
+		price, err := dr.repositories.Stock.GetLatestPrice(ctx, holding.Code)
 		if err != nil {
 			logrus.Warnf("Failed to get price for %s: %v", holding.Code, err)
 
 			continue
 		}
 
-		currentPrices[holding.Code] = price.Price
+		currentPrices[holding.Code] = client.DecimalToFloat(price.ClosePrice)
 	}
 
 	// 統計計算
