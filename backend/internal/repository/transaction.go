@@ -24,7 +24,7 @@ type Transaction struct {
 type TransactionManager interface {
 	// WithTransaction executes a function within a database transaction
 	WithTransaction(ctx context.Context, fn func(*Repositories) error) error
-	
+
 	// GetRepositories returns repositories without transaction
 	GetRepositories() *Repositories
 }
