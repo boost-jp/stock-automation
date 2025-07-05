@@ -4,9 +4,11 @@ import (
 	"log"
 
 	"github.com/boost-jp/stock-automation/app/api"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
 	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
 	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
+	"github.com/boost-jp/stock-automation/app/usecase"
 )
 
 func main() {
@@ -21,14 +23,19 @@ func main() {
 	defer connMgr.Close()
 
 	// Repository層初期化
-	txMgr := repository.NewTransactionManager(connMgr.GetDB())
-	repos := txMgr.GetRepositories()
+	db := connMgr.GetDB()
+	stockRepo := repository.NewStockRepository(db)
+	portfolioRepo := repository.NewPortfolioRepository(db)
 
-	// 通知サービス初期化（テスト用にdummy notifierを使用）
+	// 外部サービス初期化
 	notifier := notification.NewSlackNotifier()
+	stockClient := client.NewYahooFinanceClient()
+
+	// UseCase初期化
+	portfolioReportUseCase := usecase.NewPortfolioReportUseCase(stockRepo, portfolioRepo, stockClient, notifier)
 
 	// DailyReporter初期化
-	reporter := api.NewDailyReporter(repos, notifier)
+	reporter := api.NewDailyReporter(portfolioReportUseCase)
 
 	// 1. ポートフォリオ統計取得テスト
 	log.Println("\n📈 ポートフォリオ統計取得テスト")

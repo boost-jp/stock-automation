@@ -14,19 +14,19 @@ import (
 
 // BulkDataCollector handles bulk historical data collection for technical analysis.
 type BulkDataCollector struct {
-	repositories *repository.Repositories
+	stockRepo    repository.StockRepository
 	yahooClient  client.StockDataClient
 	maxRetries   int
 	maxWorkers   int
 }
 
 // NewBulkDataCollector creates a new bulk data collector.
-func NewBulkDataCollector(repos *repository.Repositories) *BulkDataCollector {
+func NewBulkDataCollector(stockRepo repository.StockRepository, stockClient client.StockDataClient) *BulkDataCollector {
 	return &BulkDataCollector{
-		repositories: repos,
-		yahooClient:  client.NewYahooFinanceClient(),
-		maxRetries:   3,
-		maxWorkers:   3, // 並列度を3に制限（API制限を考慮）
+		stockRepo:   stockRepo,
+		yahooClient: stockClient,
+		maxRetries:  3,
+		maxWorkers:  3, // 並列度を3に制限（API制限を考慮）
 	}
 }
 
@@ -40,7 +40,7 @@ func (bdc *BulkDataCollector) CollectHistoricalData(ctx context.Context, stockCo
 		log.Printf("📈 処理中 [%d/%d]: %s", i+1, len(stockCodes), code)
 
 		// Check if we already have recent data for this stock
-		latestRecord, err := bdc.repositories.Stock.GetLatestPrice(ctx, code)
+		latestRecord, err := bdc.stockRepo.GetLatestPrice(ctx, code)
 		if err == nil && latestRecord.Date.After(startDate) {
 			log.Printf("✅ %s: 既存データあり (最新: %s)", code, latestRecord.Date.Format("2006-01-02"))
 			continue
@@ -100,7 +100,7 @@ func (bdc *BulkDataCollector) CollectHistoricalDataParallel(ctx context.Context,
 			log.Printf("📈 処理開始: %s", stockCode)
 
 			// Check if we already have recent data for this stock
-			latestRecord, err := bdc.repositories.Stock.GetLatestPrice(ctx, stockCode)
+			latestRecord, err := bdc.stockRepo.GetLatestPrice(ctx, stockCode)
 			if err == nil && latestRecord.Date.After(startDate) {
 				log.Printf("✅ %s: 既存データあり (最新: %s)", stockCode, latestRecord.Date.Format("2006-01-02"))
 				results <- nil
@@ -191,7 +191,7 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStock(ctx context.Context,
 
 	// Save stock prices using repository
 	if len(stockPrices) > 0 {
-		err := bdc.repositories.Stock.SaveStockPrices(ctx, stockPrices)
+		err := bdc.stockRepo.SaveStockPrices(ctx, stockPrices)
 		if err != nil {
 			return fmt.Errorf("failed to save stock prices: %w", err)
 		}
@@ -202,28 +202,6 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStock(ctx context.Context,
 	return nil
 }
 
-// getStockName returns the stock name for a given code.
-func (bdc *BulkDataCollector) getStockName(code string) string {
-	// Mapping of stock codes to names for major Japanese stocks
-	stockNames := map[string]string{
-		"7203": "トヨタ自動車",
-		"6758": "ソニーグループ",
-		"9984": "ソフトバンクグループ",
-		"8306": "三菱UFJフィナンシャル・グループ",
-		"6861": "キーエンス",
-		"4063": "信越化学工業",
-		"6954": "ファナック",
-		"9432": "日本電信電話",
-		"4523": "エーザイ",
-		"6501": "日立製作所",
-	}
-
-	if name, exists := stockNames[code]; exists {
-		return name
-	}
-
-	return fmt.Sprintf("Stock_%s", code)
-}
 
 // GetStockCodesForAnalysis returns the list of stock codes to analyze.
 func (bdc *BulkDataCollector) GetStockCodesForAnalysis() []string {
@@ -252,12 +230,13 @@ func main() {
 	}
 	defer connMgr.Close()
 
-	// Create transaction manager and repositories
-	txMgr := repository.NewTransactionManager(connMgr.GetDB())
-	repos := txMgr.GetRepositories()
+	// Create repositories and client
+	db := connMgr.GetDB()
+	stockRepo := repository.NewStockRepository(db)
+	stockClient := client.NewYahooFinanceClient()
 
 	// Create bulk data collector
-	bulkCollector := NewBulkDataCollector(repos)
+	bulkCollector := NewBulkDataCollector(stockRepo, stockClient)
 
 	// Get stock codes for analysis
 	stockCodes := bulkCollector.GetStockCodesForAnalysis()

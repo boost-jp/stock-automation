@@ -9,9 +9,11 @@ import (
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/api"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
 	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
 	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
+	"github.com/boost-jp/stock-automation/app/usecase"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,15 +33,22 @@ func main() {
 	}
 	defer connMgr.Close()
 
-	// Repository層初期化
-	txMgr := repository.NewTransactionManager(connMgr.GetDB())
-	repos := txMgr.GetRepositories()
+	// Repository層初期化 (個別のrepositoryを使用)
+	db := connMgr.GetDB()
+	stockRepo := repository.NewStockRepository(db)
+	portfolioRepo := repository.NewPortfolioRepository(db)
 
-	// 通知サービス初期化
+	// 外部サービス初期化
 	notifier := notification.NewSlackNotifier()
+	stockClient := client.NewYahooFinanceClient()
 
-	// データコレクター初期化
-	collector := api.NewDataCollector(repos)
+	// UseCase層初期化
+	collectDataUseCase := usecase.NewCollectDataUseCase(stockRepo, portfolioRepo, stockClient)
+	portfolioReportUseCase := usecase.NewPortfolioReportUseCase(stockRepo, portfolioRepo, stockClient, notifier)
+
+	// API層初期化 (UseCaseをラップ)
+	collector := api.NewDataCollector(collectDataUseCase)
+	reporter := api.NewDailyReporter(portfolioReportUseCase)
 
 	// 監視銘柄とポートフォリオの初期読み込み
 	if err := collector.UpdateWatchList(); err != nil {
@@ -51,7 +60,7 @@ func main() {
 	}
 
 	// スケジューラー開始
-	scheduler := api.NewDataScheduler(collector, notifier)
+	scheduler := api.NewDataScheduler(collector, reporter)
 	scheduler.StartScheduledCollection()
 
 	if err := notifier.SendMessage("📈 Stock Automation System Started"); err != nil {
