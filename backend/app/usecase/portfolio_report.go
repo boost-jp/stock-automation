@@ -64,9 +64,20 @@ func (uc *PortfolioReportUseCase) GenerateAndSendDailyReport(ctx context.Context
 	// Calculate portfolio summary
 	summary := domain.CalculatePortfolioSummary(portfolio, currentPrices)
 
-	// Send notification
-	if err := uc.notifier.SendDailyReport(summary.TotalValue, summary.TotalGain, summary.TotalGainPercent); err != nil {
-		return err
+	// Generate comprehensive report
+	report := domain.GeneratePortfolioReport(summary)
+
+	// Use type assertion to check if notifier supports comprehensive report
+	if slackNotifier, ok := uc.notifier.(*notification.SlackNotifier); ok {
+		// Send comprehensive report if SlackNotifier is available
+		if err := slackNotifier.SendComprehensiveReport(report, summary); err != nil {
+			return err
+		}
+	} else {
+		// Fallback to simple daily report
+		if err := uc.notifier.SendDailyReport(summary.TotalValue, summary.TotalGain, summary.TotalGainPercent); err != nil {
+			return err
+		}
 	}
 
 	logrus.Infof("Daily report sent: Total Value=¥%.0f, Gain=¥%.0f (%.2f%%)",
