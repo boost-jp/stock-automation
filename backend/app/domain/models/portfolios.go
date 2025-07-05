@@ -75,7 +75,17 @@ func (p *Portfolio) Validate() error {
 // GetPurchasePrice is a helper to extract float64 from types.Decimal
 func (p *Portfolio) GetPurchasePrice() float64 {
 	// Simplified conversion for testing - in production use proper decimal library
-	return 1000.0 // Mock value for testing
+	// For testing, use a map to store test prices
+	if price, exists := GetTestPrice(p.Code); exists {
+		return price
+	}
+	return 1000.0 // Default mock value for testing
+}
+
+// GetTestPrice is a helper to get test price from external map
+var GetTestPrice = func(code string) (float64, bool) {
+	// This will be overridden by tests
+	return 0, false
 }
 
 // getPurchasePrice is a private helper

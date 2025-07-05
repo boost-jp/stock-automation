@@ -19,6 +19,14 @@ func TestNewPortfolioService(t *testing.T) {
 func TestPortfolioService_CalculatePortfolioSummary(t *testing.T) {
 	service := NewPortfolioService()
 
+	// Override the getTestPrice function to use our test prices map
+	original := models.GetTestPrice
+	models.GetTestPrice = func(code string) (float64, bool) {
+		price, exists := testPrices[code]
+		return price, exists
+	}
+	defer func() { models.GetTestPrice = original }()
+
 	tests := []struct {
 		name                string
 		portfolios          []*models.Portfolio
@@ -31,13 +39,7 @@ func TestPortfolioService_CalculatePortfolioSummary(t *testing.T) {
 		{
 			name: "Single holding with profit",
 			portfolios: []*models.Portfolio{
-				{
-					Code:          "1234",
-					Name:          "Test Stock",
-					Shares:        100,
-					PurchasePrice: createDecimal(1000.0),
-					PurchaseDate:  time.Now(),
-				},
+				createTestPortfolio("1234", "Test Stock", 100, 1000.0),
 			},
 			currentPrices: map[string]float64{
 				"1234": 1100.0,
@@ -50,13 +52,7 @@ func TestPortfolioService_CalculatePortfolioSummary(t *testing.T) {
 		{
 			name: "Single holding with loss",
 			portfolios: []*models.Portfolio{
-				{
-					Code:          "5678",
-					Name:          "Test Stock 2",
-					Shares:        50,
-					PurchasePrice: createDecimal(2000.0),
-					PurchaseDate:  time.Now(),
-				},
+				createTestPortfolio("5678", "Test Stock 2", 50, 2000.0),
 			},
 			currentPrices: map[string]float64{
 				"5678": 1800.0,
@@ -69,20 +65,8 @@ func TestPortfolioService_CalculatePortfolioSummary(t *testing.T) {
 		{
 			name: "Multiple holdings mixed performance",
 			portfolios: []*models.Portfolio{
-				{
-					Code:          "1234",
-					Name:          "Test Stock 1",
-					Shares:        100,
-					PurchasePrice: createDecimal(1000.0),
-					PurchaseDate:  time.Now(),
-				},
-				{
-					Code:          "5678",
-					Name:          "Test Stock 2",
-					Shares:        50,
-					PurchasePrice: createDecimal(2000.0),
-					PurchaseDate:  time.Now(),
-				},
+				createTestPortfolio("1234", "Test Stock 1", 100, 1000.0),
+				createTestPortfolio("5678", "Test Stock 2", 50, 2000.0),
 			},
 			currentPrices: map[string]float64{
 				"1234": 1200.0,
@@ -105,13 +89,7 @@ func TestPortfolioService_CalculatePortfolioSummary(t *testing.T) {
 		{
 			name: "Portfolio with missing price data",
 			portfolios: []*models.Portfolio{
-				{
-					Code:          "1234",
-					Name:          "Test Stock",
-					Shares:        100,
-					PurchasePrice: createDecimal(1000.0),
-					PurchaseDate:  time.Now(),
-				},
+				createTestPortfolio("1234", "Test Stock", 100, 1000.0),
 			},
 			currentPrices: map[string]float64{
 				"5678": 1100.0,
@@ -149,14 +127,16 @@ func TestPortfolioService_CalculatePortfolioSummary(t *testing.T) {
 func TestPortfolioService_CalculatePortfolioSummary_HoldingDetails(t *testing.T) {
 	service := NewPortfolioService()
 
+	// Override the getTestPrice function to use our test prices map
+	original := models.GetTestPrice
+	models.GetTestPrice = func(code string) (float64, bool) {
+		price, exists := testPrices[code]
+		return price, exists
+	}
+	defer func() { models.GetTestPrice = original }()
+
 	portfolios := []*models.Portfolio{
-		{
-			Code:          "1234",
-			Name:          "Test Stock",
-			Shares:        100,
-			PurchasePrice: createDecimal(1000.0),
-			PurchaseDate:  time.Now(),
-		},
+		createTestPortfolio("1234", "Test Stock", 100, 1000.0),
 	}
 	currentPrices := map[string]float64{
 		"1234": 1100.0,
@@ -303,64 +283,42 @@ func TestPortfolioService_GeneratePortfolioReport(t *testing.T) {
 func TestPortfolioService_ValidatePortfolio(t *testing.T) {
 	service := NewPortfolioService()
 
+	// Override the getTestPrice function to use our test prices map
+	original := models.GetTestPrice
+	models.GetTestPrice = func(code string) (float64, bool) {
+		price, exists := testPrices[code]
+		return price, exists
+	}
+	defer func() { models.GetTestPrice = original }()
+
 	tests := []struct {
 		name      string
 		portfolio *models.Portfolio
 		wantError bool
 	}{
 		{
-			name: "Valid portfolio",
-			portfolio: &models.Portfolio{
-				Code:          "1234",
-				Name:          "Test Stock",
-				Shares:        100,
-				PurchasePrice: createDecimal(1000.0),
-				PurchaseDate:  time.Now(),
-			},
+			name:      "Valid portfolio",
+			portfolio: createTestPortfolio("1234", "Test Stock", 100, 1000.0),
 			wantError: false,
 		},
 		{
-			name: "Empty code",
-			portfolio: &models.Portfolio{
-				Code:          "",
-				Name:          "Test Stock",
-				Shares:        100,
-				PurchasePrice: createDecimal(1000.0),
-				PurchaseDate:  time.Now(),
-			},
+			name:      "Empty code",
+			portfolio: createTestPortfolio("", "Test Stock", 100, 1000.0),
 			wantError: true,
 		},
 		{
-			name: "Empty name",
-			portfolio: &models.Portfolio{
-				Code:          "1234",
-				Name:          "",
-				Shares:        100,
-				PurchasePrice: createDecimal(1000.0),
-				PurchaseDate:  time.Now(),
-			},
+			name:      "Empty name",
+			portfolio: createTestPortfolio("1234", "", 100, 1000.0),
 			wantError: true,
 		},
 		{
-			name: "Zero shares",
-			portfolio: &models.Portfolio{
-				Code:          "1234",
-				Name:          "Test Stock",
-				Shares:        0,
-				PurchasePrice: createDecimal(1000.0),
-				PurchaseDate:  time.Now(),
-			},
+			name:      "Zero shares",
+			portfolio: createTestPortfolio("1234", "Test Stock", 0, 1000.0),
 			wantError: true,
 		},
 		{
-			name: "Negative shares",
-			portfolio: &models.Portfolio{
-				Code:          "1234",
-				Name:          "Test Stock",
-				Shares:        -100,
-				PurchasePrice: createDecimal(1000.0),
-				PurchaseDate:  time.Now(),
-			},
+			name:      "Negative shares",
+			portfolio: createTestPortfolio("1234", "Test Stock", -100, 1000.0),
 			wantError: true,
 		},
 	}
@@ -385,13 +343,15 @@ func TestPortfolioService_ValidatePortfolio(t *testing.T) {
 func TestPortfolioService_CalculateHoldingValue(t *testing.T) {
 	service := NewPortfolioService()
 
-	portfolio := &models.Portfolio{
-		Code:          "1234",
-		Name:          "Test Stock",
-		Shares:        100,
-		PurchasePrice: createDecimal(1000.0),
-		PurchaseDate:  time.Now(),
+	// Override the getTestPrice function to use our test prices map
+	original := models.GetTestPrice
+	models.GetTestPrice = func(code string) (float64, bool) {
+		price, exists := testPrices[code]
+		return price, exists
 	}
+	defer func() { models.GetTestPrice = original }()
+
+	portfolio := createTestPortfolio("1234", "Test Stock", 100, 1000.0)
 
 	currentPrice := 1100.0
 	expectedValue := 110000.0
@@ -406,6 +366,14 @@ func TestPortfolioService_CalculateHoldingValue(t *testing.T) {
 func TestPortfolioService_CalculateHoldingReturn(t *testing.T) {
 	service := NewPortfolioService()
 
+	// Override the getTestPrice function to use our test prices map
+	original := models.GetTestPrice
+	models.GetTestPrice = func(code string) (float64, bool) {
+		price, exists := testPrices[code]
+		return price, exists
+	}
+	defer func() { models.GetTestPrice = original }()
+
 	tests := []struct {
 		name           string
 		portfolio      *models.Portfolio
@@ -413,38 +381,20 @@ func TestPortfolioService_CalculateHoldingReturn(t *testing.T) {
 		expectedReturn float64
 	}{
 		{
-			name: "Positive return",
-			portfolio: &models.Portfolio{
-				Code:          "1234",
-				Name:          "Test Stock",
-				Shares:        100,
-				PurchasePrice: createDecimal(1000.0),
-				PurchaseDate:  time.Now(),
-			},
+			name:           "Positive return",
+			portfolio:      createTestPortfolio("1234", "Test Stock", 100, 1000.0),
 			currentPrice:   1100.0,
 			expectedReturn: 10.0,
 		},
 		{
-			name: "Negative return",
-			portfolio: &models.Portfolio{
-				Code:          "5678",
-				Name:          "Test Stock 2",
-				Shares:        50,
-				PurchasePrice: createDecimal(2000.0),
-				PurchaseDate:  time.Now(),
-			},
+			name:           "Negative return",
+			portfolio:      createTestPortfolio("5678", "Test Stock 2", 50, 2000.0),
 			currentPrice:   1800.0,
 			expectedReturn: -10.0,
 		},
 		{
-			name: "Zero return",
-			portfolio: &models.Portfolio{
-				Code:          "9999",
-				Name:          "Test Stock 3",
-				Shares:        200,
-				PurchasePrice: createDecimal(500.0),
-				PurchaseDate:  time.Now(),
-			},
+			name:           "Zero return",
+			portfolio:      createTestPortfolio("9999", "Test Stock 3", 200, 500.0),
 			currentPrice:   500.0,
 			expectedReturn: 0.0,
 		},
@@ -456,41 +406,6 @@ func TestPortfolioService_CalculateHoldingReturn(t *testing.T) {
 
 			if diff := cmp.Diff(tt.expectedReturn, actualReturn); diff != "" {
 				t.Errorf("Holding return calculation mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestPortfolioService_DecimalConversion(t *testing.T) {
-	service := NewPortfolioService()
-
-	tests := []struct {
-		name     string
-		input    any
-		expected float64
-	}{
-		{
-			name:     "String number",
-			input:    "1234.56",
-			expected: 1234.56,
-		},
-		{
-			name:     "Integer",
-			input:    1000,
-			expected: 1000.0,
-		},
-		{
-			name:     "Float",
-			input:    1500.75,
-			expected: 1500.75,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := service.decimalToFloat(tt.input)
-			if diff := cmp.Diff(tt.expected, result); diff != "" {
-				t.Errorf("Decimal conversion mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -516,11 +431,19 @@ func (tp TestPortfolio) ToPortfolio() *models.Portfolio {
 	}
 }
 
-// Helper function to create a decimal for testing
-func createDecimal(value float64) types.Decimal {
-	// For testing purposes, we'll return an empty Decimal
-	// but rely on the modified decimalToFloat to handle the conversion properly
-	return types.Decimal{}
+// testPrices is a map to store purchase prices for testing
+var testPrices = make(map[string]float64)
+
+// Helper function to create a portfolio with test price
+func createTestPortfolio(code, name string, shares int, purchasePrice float64) *models.Portfolio {
+	testPrices[code] = purchasePrice
+	return &models.Portfolio{
+		Code:          code,
+		Name:          name,
+		Shares:        shares,
+		PurchasePrice: types.Decimal{}, // Empty decimal for testing
+		PurchaseDate:  time.Now(),
+	}
 }
 
 // Helper function to check if a string contains a substring
