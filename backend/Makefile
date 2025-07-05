@@ -15,15 +15,6 @@ help: ## Display help message
 	@echo "Available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-# Development Tools Installation
-install-tools: ## Install development tools
-	@echo "Installing development tools..."
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	@go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest || echo "gosec install failed, continuing..."
-	@go install golang.org/x/tools/cmd/goimports@latest
-	@go install github.com/swaggo/swag/cmd/swag@latest
-	@echo "Development tools installed successfully"
-
 # Build
 build: ## Build the application
 	@echo "Building application..."
@@ -61,7 +52,7 @@ lint: ## Run linter
 fmt: ## Format code
 	@echo "Formatting code..."
 	@go fmt ./...
-	@goimports -w .
+	@go tool goimports -w .
 
 vet: ## Run go vet
 	@echo "Running go vet..."
@@ -100,15 +91,38 @@ run: ## Run the application
 	@go run $(MAIN_FILE)
 
 # Database
-migrate: ## Run database migrations
-	@echo "Running database migrations..."
-	@go run cmd/migrate.go
+DB_HOST ?= localhost
+DB_PORT ?= 3309
+DB_USER ?= root
+DB_PASS ?= password
+DB_NAME ?= stock_automation
+
+db-setup: ## Create database if not exists
+	@echo "Creating database if not exists..."
+	@docker exec stock-automation-mysql mysql -u$(DB_USER) -p$(DB_PASS) -e "CREATE DATABASE IF NOT EXISTS $(DB_NAME) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+db-migrate: ## Apply database schema using mysqldef
+	@echo "Applying database schema..."
+	@go run github.com/sqldef/sqldef/cmd/mysqldef@latest -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(DB_NAME) < schema.sql
+
+sqlboiler-generate: ## Generate SQLBoiler models
+	@echo "Generating SQLBoiler models..."
+	@echo "Step 1: Generate DAO package..."
+	@rm -rf app/infrastructure/dao/*.go
+	@go tool sqlboiler mysql -o app/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional
+	@echo "Step 2: Generate domain models..."
+	@go tool sqlboiler mysql -o app/infrastructure/dto -p models --no-driver-templates --wipe --templates templates/sqlboiler/models
+	@mv -n app/infrastructure/dto/*.go app/domain/models 2>/dev/null || true
+	@rm -rf app/infrastructure/dto/*.go
+
+migrate: db-migrate ## Run database migrations (alias for db-migrate)
 
 # Cleanup
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
 	@rm -f $(BINARY_NAME) $(BINARY_NAME)-linux
 	@rm -f $(COVERAGE_FILE) coverage.html
+	@rm -rf app/models_generated
 	@go clean
 
 clean-all: clean docker-down ## Clean everything including Docker containers

@@ -264,14 +264,14 @@ COMMENT='システム設定テーブル';
 
 ### 基本操作クラス
 
-#### `internal/database/operations.go`
+#### `app/database/operations.go`
 ```go
 package database
 
 import (
     "time"
     "gorm.io/gorm"
-    "stock-automation/internal/models"
+    "stock-automation/app/models"
 )
 
 type StockOperations struct {

@@ -21,7 +21,7 @@ Interface Layer (最外層)
 ### ディレクトリ構造
 ```
 backend/
-├── internal/
+├── app/
 │   ├── domain/          # ドメイン層（ビジネスロジック）
 │   │   ├── stock.go     # 株式関連ドメイン
 │   │   ├── portfolio.go # ポートフォリオ関連

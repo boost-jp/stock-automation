@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"stock-automation/internal/api"
-	"stock-automation/internal/database"
-	"stock-automation/internal/models"
 	"sync"
 	"time"
+
+	"github.com/boost-jp/stock-automation/app/api"
+	"github.com/boost-jp/stock-automation/app/database"
+	"github.com/boost-jp/stock-automation/app/models"
 
 	"gorm.io/gorm"
 )

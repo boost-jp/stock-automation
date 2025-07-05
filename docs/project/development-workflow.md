@@ -80,7 +80,7 @@ git push origin feature/123-new-feature
 ### Go規約
 ```go
 // パッケージ・ファイル構成
-internal/
+app/
 ├── models/      # データモデル
 ├── services/    # ビジネスロジック  
 ├── api/         # HTTPハンドラー

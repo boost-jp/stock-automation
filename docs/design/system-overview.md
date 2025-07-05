@@ -165,7 +165,7 @@ backend/
 ├── cmd/
 │   ├── main.go                 # システム起動
 │   └── test_*.go              # 各種テストツール
-├── internal/
+├── app/
 │   ├── api/
 │   │   ├── data_collector.go   # データ収集 (85%完成)
 │   │   ├── daily_reporter.go   # レポーター (40%完成)

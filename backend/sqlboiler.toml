@@ -1,0 +1,21 @@
+# SQLBoiler Configuration
+
+[mysql]
+  # Database connection parameters
+  dbname = "stock_automation"
+  host = "127.0.0.1"
+  port = 3309
+  user = "root"
+  pass = "password"
+  sslmode = "false"
+
+[imports.all]
+  third_party = [
+  '"github.com/aarondl/sqlboiler/v4/drivers"',
+  '"github.com/aarondl/sqlboiler/v4/boil"',
+  '"github.com/aarondl/sqlboiler/v4/queries"',
+  '"github.com/aarondl/sqlboiler/v4/queries/qm"',
+  '"github.com/aarondl/sqlboiler/v4/queries/qmhelper"',
+  '"github.com/aarondl/strmangle"']
+
+
