@@ -300,4 +300,3 @@ func TestPortfolioCalculations(t *testing.T) {
 		}
 	})
 }
-
