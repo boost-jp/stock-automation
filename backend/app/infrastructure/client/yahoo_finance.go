@@ -54,13 +54,28 @@ type YahooFinanceResponse struct {
 	} `json:"chart"`
 }
 
+// YahooFinanceConfig holds Yahoo Finance client configuration.
+type YahooFinanceConfig struct {
+	BaseURL       string
+	Timeout       time.Duration
+	RetryCount    int
+	RetryWaitTime time.Duration
+	RetryMaxWait  time.Duration
+	UserAgent     string
+}
+
 // NewYahooFinanceClient creates a new Yahoo Finance client.
 func NewYahooFinanceClient() *YahooFinanceClient {
+	return NewYahooFinanceClientWithConfig(DefaultYahooFinanceConfig())
+}
+
+// NewYahooFinanceClientWithConfig creates a new Yahoo Finance client with custom configuration.
+func NewYahooFinanceClientWithConfig(config YahooFinanceConfig) *YahooFinanceClient {
 	client := resty.New()
-	client.SetTimeout(30 * time.Second)
-	client.SetRetryCount(3)
-	client.SetRetryWaitTime(1 * time.Second)
-	client.SetRetryMaxWaitTime(10 * time.Second)
+	client.SetTimeout(config.Timeout)
+	client.SetRetryCount(config.RetryCount)
+	client.SetRetryWaitTime(config.RetryWaitTime)
+	client.SetRetryMaxWaitTime(config.RetryMaxWait)
 
 	// Add exponential backoff for retries
 	client.AddRetryCondition(func(r *resty.Response, err error) bool {
@@ -69,7 +84,19 @@ func NewYahooFinanceClient() *YahooFinanceClient {
 
 	return &YahooFinanceClient{
 		client:  client,
-		baseURL: "https://query1.finance.yahoo.com",
+		baseURL: config.BaseURL,
+	}
+}
+
+// DefaultYahooFinanceConfig returns default configuration for Yahoo Finance client.
+func DefaultYahooFinanceConfig() YahooFinanceConfig {
+	return YahooFinanceConfig{
+		BaseURL:       "https://query1.finance.yahoo.com",
+		Timeout:       30 * time.Second,
+		RetryCount:    3,
+		RetryWaitTime: 1 * time.Second,
+		RetryMaxWait:  10 * time.Second,
+		UserAgent:     "Mozilla/5.0 (compatible; StockAutomation/1.0)",
 	}
 }
 
