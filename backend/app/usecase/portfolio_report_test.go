@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -251,7 +252,7 @@ func TestPortfolioReportUseCase_SendComprehensiveDailyReport(t *testing.T) {
 	}
 
 	for _, element := range expectedElements {
-		if !contains(report, element) {
+		if !strings.Contains(report, element) {
 			t.Errorf("Report missing expected element: %s", element)
 		}
 	}

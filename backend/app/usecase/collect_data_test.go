@@ -224,17 +224,18 @@ func (m *MockStockDataClient) GetCurrentPrice(stockCode string) (*models.StockPr
 		price = 1000.0 // Default price
 	}
 
+	now := time.Now()
 	return &models.StockPrice{
-		ID:         fmt.Sprintf("price-%s-%d", stockCode, time.Now().Unix()),
+		ID:         fmt.Sprintf("price-%s-%d", stockCode, now.Unix()),
 		Code:       stockCode,
-		Date:       time.Now(),
+		Date:       now,
 		OpenPrice:  client.FloatToDecimal(price * 0.99),
 		HighPrice:  client.FloatToDecimal(price * 1.01),
 		LowPrice:   client.FloatToDecimal(price * 0.98),
 		ClosePrice: client.FloatToDecimal(price),
 		Volume:     1000000,
-		CreatedAt:  fixture.NullTimeFrom(time.Now()),
-		UpdatedAt:  fixture.NullTimeFrom(time.Now()),
+		CreatedAt:  fixture.NullTimeFrom(now),
+		UpdatedAt:  fixture.NullTimeFrom(now),
 	}, nil
 }
 

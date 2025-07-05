@@ -77,7 +77,8 @@
       "Bash(rg:*)",
       "Bash(TEST_DB_PORT=3309 make test)",
       "Bash(curl:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(gh pr diff:*)"
     ],
     "deny": []
   }

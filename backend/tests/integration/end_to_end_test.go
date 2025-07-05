@@ -3,6 +3,9 @@ package integration
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -186,10 +189,10 @@ func TestEndToEnd_SchedulerIntegration(t *testing.T) {
 	// Create test configuration
 	cfg := &config.Config{
 		Database: config.DatabaseConfig{
-			Host:         "localhost",
-			Port:         3306,
-			User:         "test",
-			Password:     "test",
+			Host:         getEnvOrDefault("TEST_DB_HOST", "localhost"),
+			Port:         getEnvOrDefaultInt("TEST_DB_PORT", 3306),
+			User:         getEnvOrDefault("TEST_DB_USER", "root"),
+			Password:     getEnvOrDefault("TEST_DB_PASSWORD", "password"),
 			DatabaseName: "test_db",
 			MaxOpenConns: 10,
 			MaxIdleConns: 5,
@@ -320,10 +323,13 @@ type e2eMockStockDataClient struct {
 	shouldError bool
 	errorMsg    string
 	callCount   int
+	mu          sync.Mutex // Mutex for thread-safe access
 }
 
 func (m *e2eMockStockDataClient) GetCurrentPrice(stockCode string) (*models.StockPrice, error) {
+	m.mu.Lock()
 	m.callCount++
+	m.mu.Unlock()
 
 	if m.shouldError {
 		return nil, fmt.Errorf("%s", m.errorMsg)
@@ -334,16 +340,18 @@ func (m *e2eMockStockDataClient) GetCurrentPrice(stockCode string) (*models.Stoc
 		price = 1000.0 // Default price
 	}
 
+	now := time.Now()
 	return &models.StockPrice{
+		ID:         fmt.Sprintf("test-%s-%d", stockCode, now.Unix()),
 		Code:       stockCode,
-		Date:       time.Now(),
+		Date:       now,
 		OpenPrice:  client.FloatToDecimal(price * 0.98),
 		HighPrice:  client.FloatToDecimal(price * 1.02),
 		LowPrice:   client.FloatToDecimal(price * 0.97),
 		ClosePrice: client.FloatToDecimal(price),
 		Volume:     1000000,
-		CreatedAt:  fixture.NullTimeFrom(time.Now()),
-		UpdatedAt:  fixture.NullTimeFrom(time.Now()),
+		CreatedAt:  fixture.NullTimeFrom(now),
+		UpdatedAt:  fixture.NullTimeFrom(now),
 	}, nil
 }
 
@@ -400,4 +408,22 @@ func (m *e2eMockNotificationService) SendStockAlert(stockCode, stockName string,
 	}
 	m.sendStockAlertCalled = true
 	return nil
+}
+
+// getEnvOrDefault returns environment variable value or default
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+// getEnvOrDefaultInt returns environment variable value as int or default
+func getEnvOrDefaultInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
 }
