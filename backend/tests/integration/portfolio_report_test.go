@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/analysis"
+	"github.com/boost-jp/stock-automation/app/domain"
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
@@ -371,7 +371,7 @@ func TestPortfolioReportUseCase_GetPortfolioStatistics(t *testing.T) {
 	tests := []struct {
 		name            string
 		setupFunc       func(t *testing.T)
-		expectedSummary *analysis.PortfolioSummary
+		expectedSummary *domain.PortfolioSummary
 		wantErr         bool
 	}{
 		{
@@ -398,7 +398,7 @@ func TestPortfolioReportUseCase_GetPortfolioStatistics(t *testing.T) {
 					t.Fatalf("Failed to insert test stock price: %v", err)
 				}
 			},
-			expectedSummary: &analysis.PortfolioSummary{
+			expectedSummary: &domain.PortfolioSummary{
 				TotalValue:       220000.0,
 				TotalCost:        200000.0,
 				TotalGain:        20000.0,
@@ -409,7 +409,7 @@ func TestPortfolioReportUseCase_GetPortfolioStatistics(t *testing.T) {
 		{
 			name:      "empty portfolio statistics",
 			setupFunc: func(t *testing.T) {},
-			expectedSummary: &analysis.PortfolioSummary{
+			expectedSummary: &domain.PortfolioSummary{
 				TotalValue:       0.0,
 				TotalCost:        0.0,
 				TotalGain:        0.0,

@@ -1,11 +1,13 @@
 package domain
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/boost-jp/stock-automation/app/domain/models"
+	"github.com/ericlagergren/decimal"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -18,14 +20,6 @@ func TestNewPortfolioService(t *testing.T) {
 
 func TestPortfolioService_CalculatePortfolioSummary(t *testing.T) {
 	service := NewPortfolioService()
-
-	// Override the getTestPrice function to use our test prices map
-	original := models.GetTestPrice
-	models.GetTestPrice = func(code string) (float64, bool) {
-		price, exists := testPrices[code]
-		return price, exists
-	}
-	defer func() { models.GetTestPrice = original }()
 
 	tests := []struct {
 		name                string
@@ -126,14 +120,6 @@ func TestPortfolioService_CalculatePortfolioSummary(t *testing.T) {
 
 func TestPortfolioService_CalculatePortfolioSummary_HoldingDetails(t *testing.T) {
 	service := NewPortfolioService()
-
-	// Override the getTestPrice function to use our test prices map
-	original := models.GetTestPrice
-	models.GetTestPrice = func(code string) (float64, bool) {
-		price, exists := testPrices[code]
-		return price, exists
-	}
-	defer func() { models.GetTestPrice = original }()
 
 	portfolios := []*models.Portfolio{
 		createTestPortfolio("1234", "Test Stock", 100, 1000.0),
@@ -283,14 +269,6 @@ func TestPortfolioService_GeneratePortfolioReport(t *testing.T) {
 func TestPortfolioService_ValidatePortfolio(t *testing.T) {
 	service := NewPortfolioService()
 
-	// Override the getTestPrice function to use our test prices map
-	original := models.GetTestPrice
-	models.GetTestPrice = func(code string) (float64, bool) {
-		price, exists := testPrices[code]
-		return price, exists
-	}
-	defer func() { models.GetTestPrice = original }()
-
 	tests := []struct {
 		name      string
 		portfolio *models.Portfolio
@@ -343,14 +321,6 @@ func TestPortfolioService_ValidatePortfolio(t *testing.T) {
 func TestPortfolioService_CalculateHoldingValue(t *testing.T) {
 	service := NewPortfolioService()
 
-	// Override the getTestPrice function to use our test prices map
-	original := models.GetTestPrice
-	models.GetTestPrice = func(code string) (float64, bool) {
-		price, exists := testPrices[code]
-		return price, exists
-	}
-	defer func() { models.GetTestPrice = original }()
-
 	portfolio := createTestPortfolio("1234", "Test Stock", 100, 1000.0)
 
 	currentPrice := 1100.0
@@ -365,14 +335,6 @@ func TestPortfolioService_CalculateHoldingValue(t *testing.T) {
 
 func TestPortfolioService_CalculateHoldingReturn(t *testing.T) {
 	service := NewPortfolioService()
-
-	// Override the getTestPrice function to use our test prices map
-	original := models.GetTestPrice
-	models.GetTestPrice = func(code string) (float64, bool) {
-		price, exists := testPrices[code]
-		return price, exists
-	}
-	defer func() { models.GetTestPrice = original }()
 
 	tests := []struct {
 		name           string
@@ -426,22 +388,29 @@ func (tp TestPortfolio) ToPortfolio() *models.Portfolio {
 		Code:          tp.Code,
 		Name:          tp.Name,
 		Shares:        tp.Shares,
-		PurchasePrice: types.Decimal{}, // This will be handled by decimalToFloat
+		PurchasePrice: floatToDecimal(tp.PurchasePrice),
 		PurchaseDate:  tp.PurchaseDate,
 	}
 }
 
-// testPrices is a map to store purchase prices for testing
-var testPrices = make(map[string]float64)
+// floatToDecimal converts float64 to types.Decimal for testing
+func floatToDecimal(value float64) types.Decimal {
+	decimalStr := fmt.Sprintf("%.6f", value)
+	d := new(decimal.Big)
+	d.SetString(decimalStr)
+	return types.Decimal{Big: d}
+}
 
 // Helper function to create a portfolio with test price
 func createTestPortfolio(code, name string, shares int, purchasePrice float64) *models.Portfolio {
-	testPrices[code] = purchasePrice
+	// Convert float to decimal using the infrastructure client helper
+	decimalValue := floatToDecimal(purchasePrice)
+
 	return &models.Portfolio{
 		Code:          code,
 		Name:          name,
 		Shares:        shares,
-		PurchasePrice: types.Decimal{}, // Empty decimal for testing
+		PurchasePrice: decimalValue,
 		PurchaseDate:  time.Now(),
 	}
 }

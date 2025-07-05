@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/boost-jp/stock-automation/app/analysis"
+	"github.com/boost-jp/stock-automation/app/domain"
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
@@ -47,7 +47,7 @@ func (uc *TechnicalAnalysisUseCase) CalculateAndSaveTechnicalIndicators(ctx cont
 	}
 
 	// Use the existing analysis functions
-	indicator := analysis.CalculateAllIndicators(priceValues)
+	indicator := domain.CalculateAllIndicators(priceValues)
 
 	// Set the stock code (indicator already has the correct structure)
 	if indicator == nil {
