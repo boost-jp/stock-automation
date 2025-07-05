@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/models"
-
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -74,5 +73,6 @@ func (db *DB) Close() error {
 	if err != nil {
 		return err
 	}
+
 	return sqlDB.Close()
 }

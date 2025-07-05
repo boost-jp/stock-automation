@@ -5,19 +5,19 @@ import (
 	"math"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/aarondl/sqlboiler/v4/types"
+	"github.com/boost-jp/stock-automation/app/domain/models"
 )
 
-// TechnicalAnalysisService handles technical analysis business logic
+// TechnicalAnalysisService handles technical analysis business logic.
 type TechnicalAnalysisService struct{}
 
-// NewTechnicalAnalysisService creates a new technical analysis service
+// NewTechnicalAnalysisService creates a new technical analysis service.
 func NewTechnicalAnalysisService() *TechnicalAnalysisService {
 	return &TechnicalAnalysisService{}
 }
 
-// StockPriceData represents simplified stock price data for calculations
+// StockPriceData represents simplified stock price data for calculations.
 type StockPriceData struct {
 	Code      string
 	Date      time.Time
@@ -29,7 +29,7 @@ type StockPriceData struct {
 	Timestamp time.Time
 }
 
-// TechnicalIndicatorData represents calculated technical indicators
+// TechnicalIndicatorData represents calculated technical indicators.
 type TechnicalIndicatorData struct {
 	Code      string
 	MA5       float64
@@ -42,7 +42,7 @@ type TechnicalIndicatorData struct {
 	Timestamp time.Time
 }
 
-// TradingSignal represents buy/sell/hold signal
+// TradingSignal represents buy/sell/hold signal.
 type TradingSignal struct {
 	Action     string  // "buy", "sell", "hold"
 	Confidence float64 // 0.0 to 1.0
@@ -50,7 +50,7 @@ type TradingSignal struct {
 	Score      float64
 }
 
-// ConvertStockPrices converts SQLBoiler models to domain service format
+// ConvertStockPrices converts SQLBoiler models to domain service format.
 func (s *TechnicalAnalysisService) ConvertStockPrices(prices []*models.StockPrice) []StockPriceData {
 	result := make([]StockPriceData, len(prices))
 	for i, p := range prices {
@@ -65,10 +65,11 @@ func (s *TechnicalAnalysisService) ConvertStockPrices(prices []*models.StockPric
 			Timestamp: p.Date,
 		}
 	}
+
 	return result
 }
 
-// MovingAverage calculates simple moving average
+// MovingAverage calculates simple moving average.
 func (s *TechnicalAnalysisService) MovingAverage(prices []StockPriceData, period int) float64 {
 	if len(prices) < period {
 		return 0
@@ -82,7 +83,7 @@ func (s *TechnicalAnalysisService) MovingAverage(prices []StockPriceData, period
 	return sum / float64(period)
 }
 
-// RSI calculates Relative Strength Index
+// RSI calculates Relative Strength Index.
 func (s *TechnicalAnalysisService) RSI(prices []StockPriceData, period int) float64 {
 	if len(prices) <= period {
 		return 50.0 // 中立値
@@ -114,7 +115,7 @@ func (s *TechnicalAnalysisService) RSI(prices []StockPriceData, period int) floa
 	return rsi
 }
 
-// MACD calculates Moving Average Convergence Divergence
+// MACD calculates Moving Average Convergence Divergence.
 func (s *TechnicalAnalysisService) MACD(prices []StockPriceData, fastPeriod, slowPeriod, signalPeriod int) (macd, signal, histogram float64) {
 	if len(prices) < slowPeriod {
 		return 0, 0, 0
@@ -152,7 +153,7 @@ func (s *TechnicalAnalysisService) MACD(prices []StockPriceData, fastPeriod, slo
 	return macd, signal, histogram
 }
 
-// CalculateAllIndicators calculates all technical indicators for a stock
+// CalculateAllIndicators calculates all technical indicators for a stock.
 func (s *TechnicalAnalysisService) CalculateAllIndicators(prices []StockPriceData) *TechnicalIndicatorData {
 	if len(prices) == 0 {
 		return nil
@@ -176,7 +177,7 @@ func (s *TechnicalAnalysisService) CalculateAllIndicators(prices []StockPriceDat
 	return indicator
 }
 
-// GenerateTradingSignal generates trading signal based on technical indicators
+// GenerateTradingSignal generates trading signal based on technical indicators.
 func (s *TechnicalAnalysisService) GenerateTradingSignal(indicator *TechnicalIndicatorData, currentPrice float64) *TradingSignal {
 	score := 0.0
 	reasons := []string{}
@@ -184,41 +185,50 @@ func (s *TechnicalAnalysisService) GenerateTradingSignal(indicator *TechnicalInd
 	// RSI based signals
 	if indicator.RSI < 30 {
 		score += 2.0
+
 		reasons = append(reasons, "RSI oversold")
 	} else if indicator.RSI > 70 {
 		score -= 2.0
+
 		reasons = append(reasons, "RSI overbought")
 	}
 
 	// Moving Average signals
 	if indicator.MA5 > indicator.MA25 && indicator.MA25 > indicator.MA75 {
 		score += 1.5
+
 		reasons = append(reasons, "Bullish MA alignment")
 	} else if indicator.MA5 < indicator.MA25 && indicator.MA25 < indicator.MA75 {
 		score -= 1.5
+
 		reasons = append(reasons, "Bearish MA alignment")
 	}
 
 	// MACD signals
 	if indicator.MACD > indicator.Signal && indicator.Histogram > 0 {
 		score += 1.0
+
 		reasons = append(reasons, "MACD bullish")
 	} else if indicator.MACD < indicator.Signal && indicator.Histogram < 0 {
 		score -= 1.0
+
 		reasons = append(reasons, "MACD bearish")
 	}
 
 	// Price vs Moving Average
 	if currentPrice > indicator.MA5 && currentPrice > indicator.MA25 {
 		score += 0.5
+
 		reasons = append(reasons, "Price above key MAs")
 	} else if currentPrice < indicator.MA5 && currentPrice < indicator.MA25 {
 		score -= 0.5
+
 		reasons = append(reasons, "Price below key MAs")
 	}
 
 	// Determine action and confidence
 	var action string
+
 	confidence := math.Min(math.Abs(score)/5.0, 1.0) // Normalize to 0-1
 
 	if score > 1.0 {
@@ -246,7 +256,7 @@ func (s *TechnicalAnalysisService) GenerateTradingSignal(indicator *TechnicalInd
 	}
 }
 
-// ConvertToModelIndicator converts domain indicator to SQLBoiler model
+// ConvertToModelIndicator converts domain indicator to SQLBoiler model.
 func (s *TechnicalAnalysisService) ConvertToModelIndicator(data *TechnicalIndicatorData) *models.TechnicalIndicator {
 	return &models.TechnicalIndicator{
 		Code: data.Code,
@@ -263,34 +273,39 @@ func (s *TechnicalAnalysisService) ConvertToModelIndicator(data *TechnicalIndica
 	}
 }
 
-// decimalToFloat converts types.Decimal to float64
+// decimalToFloat converts types.Decimal to float64.
 func (s *TechnicalAnalysisService) decimalToFloat(d any) float64 {
 	// This is a simplified conversion
 	// In a real implementation, you would use the actual decimal library methods
 	str := fmt.Sprintf("%v", d)
+
 	var f float64
+
 	fmt.Sscanf(str, "%f", &f)
+
 	return f
 }
 
-// floatToDecimal converts float64 to types.NullDecimal
+// floatToDecimal converts float64 to types.NullDecimal.
 func (s *TechnicalAnalysisService) floatToDecimal(f float64) types.NullDecimal {
 	// Simplified placeholder conversion - returns empty NullDecimal
 	return types.NullDecimal{}
 }
 
-// ValidateIndicator validates technical indicator values
+// ValidateIndicator validates technical indicator values.
 func (s *TechnicalAnalysisService) ValidateIndicator(indicator *TechnicalIndicatorData) error {
 	if indicator.Code == "" {
 		return fmt.Errorf("銘柄コードは必須です")
 	}
+
 	if indicator.RSI < 0 || indicator.RSI > 100 {
 		return fmt.Errorf("RSIは0から100の範囲である必要があります")
 	}
+
 	return nil
 }
 
-// GetSignalStrength returns signal strength description
+// GetSignalStrength returns signal strength description.
 func (s *TechnicalAnalysisService) GetSignalStrength(indicator *TechnicalIndicatorData) string {
 	buySignals := 0
 	sellSignals := 0
@@ -314,5 +329,6 @@ func (s *TechnicalAnalysisService) GetSignalStrength(indicator *TechnicalIndicat
 	} else if sellSignals > buySignals {
 		return "Strong Sell"
 	}
+
 	return "Neutral"
 }

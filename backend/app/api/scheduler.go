@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/notification"
-
 	"github.com/go-co-op/gocron"
 	"github.com/sirupsen/logrus"
 )
@@ -41,6 +40,7 @@ func (ds *DataScheduler) StartScheduledCollection() {
 		if err := ds.collector.UpdateWatchList(); err != nil {
 			logrus.Error("Failed to update watch list:", err)
 		}
+
 		if err := ds.collector.UpdatePortfolio(); err != nil {
 			logrus.Error("Failed to update portfolio:", err)
 		}

@@ -11,7 +11,6 @@ import (
 	"github.com/boost-jp/stock-automation/app/api"
 	"github.com/boost-jp/stock-automation/app/database"
 	"github.com/boost-jp/stock-automation/app/notification"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -45,6 +44,7 @@ func main() {
 	if err := collector.UpdateWatchList(); err != nil {
 		logrus.Error("Failed to initialize watch list:", err)
 	}
+
 	if err := collector.UpdatePortfolio(); err != nil {
 		logrus.Error("Failed to initialize portfolio:", err)
 	}

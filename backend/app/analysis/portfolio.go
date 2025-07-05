@@ -9,7 +9,7 @@ import (
 	"github.com/boost-jp/stock-automation/app/models"
 )
 
-// PortfolioSummary represents portfolio performance summary
+// PortfolioSummary represents portfolio performance summary.
 type PortfolioSummary struct {
 	TotalValue       float64
 	TotalCost        float64
@@ -19,7 +19,7 @@ type PortfolioSummary struct {
 	UpdatedAt        time.Time
 }
 
-// HoldingSummary represents individual holding performance
+// HoldingSummary represents individual holding performance.
 type HoldingSummary struct {
 	Code          string
 	Name          string
@@ -33,7 +33,7 @@ type HoldingSummary struct {
 	LastUpdated   time.Time
 }
 
-// CalculatePortfolioSummary calculates portfolio performance
+// CalculatePortfolioSummary calculates portfolio performance.
 func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[string]float64) *PortfolioSummary {
 	summary := &PortfolioSummary{
 		Holdings:  make([]HoldingSummary, 0),
@@ -77,7 +77,7 @@ func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[s
 	return summary
 }
 
-// GeneratePortfolioReport generates a formatted report
+// GeneratePortfolioReport generates a formatted report.
 func GeneratePortfolioReport(summary *PortfolioSummary) string {
 	if len(summary.Holdings) == 0 {
 		return "ポートフォリオにデータがありません"
@@ -117,7 +117,7 @@ func GeneratePortfolioReport(summary *PortfolioSummary) string {
 	return report
 }
 
-// Helper function for string formatting - Japanese report formatting
+// Helper function for string formatting - Japanese report formatting.
 func sprintf(format string, args ...interface{}) string {
 	switch format {
 	case "現在価値: ¥%.0f\n":
@@ -140,7 +140,7 @@ func sprintf(format string, args ...interface{}) string {
 	}
 }
 
-// formatCurrency formats a float64 as Japanese currency with comma separators
+// formatCurrency formats a float64 as Japanese currency with comma separators.
 func formatCurrency(f float64) string {
 	// Convert to string without decimals
 	str := fmt.Sprintf("%.0f", f)
@@ -163,17 +163,17 @@ func formatCurrency(f float64) string {
 	return formatted
 }
 
-// formatPercent formats a float64 as percentage with 2 decimal places
+// formatPercent formats a float64 as percentage with 2 decimal places.
 func formatPercent(f float64) string {
 	return fmt.Sprintf("%.2f", f)
 }
 
-// formatInt formats an integer as string with comma separators
+// formatInt formats an integer as string with comma separators.
 func formatInt(i int) string {
 	return addCommaToNumber(strconv.Itoa(i))
 }
 
-// addCommaToNumber adds comma separators to a number string
+// addCommaToNumber adds comma separators to a number string.
 func addCommaToNumber(s string) string {
 	n := len(s)
 	if n <= 3 {
@@ -181,10 +181,12 @@ func addCommaToNumber(s string) string {
 	}
 
 	var result strings.Builder
+
 	for i, digit := range s {
 		if i > 0 && (n-i)%3 == 0 {
 			result.WriteString(",")
 		}
+
 		result.WriteRune(digit)
 	}
 

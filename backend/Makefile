@@ -47,7 +47,7 @@ test-all: test test-integration ## Run all tests
 # Code Quality
 lint: ## Run linter
 	@echo "Running linter..."
-	@golangci-lint run --fix
+	@go tool golangci-lint run --fix
 
 fmt: ## Format code
 	@echo "Formatting code..."

@@ -50,6 +50,7 @@ func NewSlackNotifier() *SlackNotifier {
 func (s *SlackNotifier) SendMessage(message string) error {
 	if s.webhookURL == "" {
 		logrus.Debug("Slack webhook URL not configured, skipping notification")
+
 		return nil
 	}
 

@@ -7,7 +7,6 @@ import (
 	"github.com/boost-jp/stock-automation/app/analysis"
 	"github.com/boost-jp/stock-automation/app/database"
 	"github.com/boost-jp/stock-automation/app/notification"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -34,17 +33,21 @@ func (dr *DailyReporter) GenerateAndSendDailyReport() error {
 
 	if len(portfolio) == 0 {
 		logrus.Info("No portfolio data found, skipping daily report")
+
 		return nil
 	}
 
 	// 現在価格取得
 	currentPrices := make(map[string]float64)
+
 	for _, holding := range portfolio {
 		price, err := dr.db.GetLatestPrice(holding.Code)
 		if err != nil {
 			logrus.Warnf("Failed to get price for %s: %v", holding.Code, err)
+
 			continue
 		}
+
 		currentPrices[holding.Code] = price.Price
 	}
 
@@ -71,11 +74,13 @@ func (dr *DailyReporter) SendPortfolioAnalysis() error {
 
 	// 現在価格取得
 	currentPrices := make(map[string]float64)
+
 	for _, holding := range portfolio {
 		price, err := dr.db.GetLatestPrice(holding.Code)
 		if err != nil {
 			continue
 		}
+
 		currentPrices[holding.Code] = price.Price
 	}
 
@@ -87,7 +92,7 @@ func (dr *DailyReporter) SendPortfolioAnalysis() error {
 	return dr.notifier.SendMessage(report)
 }
 
-// GenerateComprehensiveDailyReport generates a comprehensive daily report with enhanced error handling
+// GenerateComprehensiveDailyReport generates a comprehensive daily report with enhanced error handling.
 func (dr *DailyReporter) GenerateComprehensiveDailyReport() (string, error) {
 	logrus.Info("Generating comprehensive daily portfolio report...")
 
@@ -103,6 +108,7 @@ func (dr *DailyReporter) GenerateComprehensiveDailyReport() (string, error) {
 
 	// 現在価格取得（エラーハンドリング強化）
 	currentPrices := make(map[string]float64)
+
 	var priceErrors []string
 
 	for _, holding := range portfolio {
@@ -110,9 +116,12 @@ func (dr *DailyReporter) GenerateComprehensiveDailyReport() (string, error) {
 		if err != nil {
 			errorMsg := fmt.Sprintf("%s (%s): 価格取得エラー", holding.Name, holding.Code)
 			priceErrors = append(priceErrors, errorMsg)
+
 			logrus.Warnf("Failed to get price for %s: %v", holding.Code, err)
+
 			continue
 		}
+
 		currentPrices[holding.Code] = price.Price
 	}
 
@@ -134,7 +143,7 @@ func (dr *DailyReporter) GenerateComprehensiveDailyReport() (string, error) {
 	return report, nil
 }
 
-// SendComprehensiveDailyReport sends comprehensive daily report via notification
+// SendComprehensiveDailyReport sends comprehensive daily report via notification.
 func (dr *DailyReporter) SendComprehensiveDailyReport() error {
 	report, err := dr.GenerateComprehensiveDailyReport()
 	if err != nil {
@@ -147,10 +156,11 @@ func (dr *DailyReporter) SendComprehensiveDailyReport() error {
 	}
 
 	logrus.Info("Comprehensive daily report sent successfully")
+
 	return nil
 }
 
-// GetPortfolioStatistics returns detailed portfolio statistics
+// GetPortfolioStatistics returns detailed portfolio statistics.
 func (dr *DailyReporter) GetPortfolioStatistics() (*analysis.PortfolioSummary, error) {
 	// ポートフォリオ取得
 	portfolio, err := dr.db.GetPortfolio()
@@ -164,12 +174,15 @@ func (dr *DailyReporter) GetPortfolioStatistics() (*analysis.PortfolioSummary, e
 
 	// 現在価格取得
 	currentPrices := make(map[string]float64)
+
 	for _, holding := range portfolio {
 		price, err := dr.db.GetLatestPrice(holding.Code)
 		if err != nil {
 			logrus.Warnf("Failed to get price for %s: %v", holding.Code, err)
+
 			continue
 		}
+
 		currentPrices[holding.Code] = price.Price
 	}
 

@@ -9,15 +9,15 @@ import (
 	"github.com/boost-jp/stock-automation/app/domain/models"
 )
 
-// PortfolioService handles portfolio business logic
+// PortfolioService handles portfolio business logic.
 type PortfolioService struct{}
 
-// NewPortfolioService creates a new portfolio service
+// NewPortfolioService creates a new portfolio service.
 func NewPortfolioService() *PortfolioService {
 	return &PortfolioService{}
 }
 
-// PortfolioSummary represents portfolio performance summary
+// PortfolioSummary represents portfolio performance summary.
 type PortfolioSummary struct {
 	TotalValue       float64
 	TotalCost        float64
@@ -27,7 +27,7 @@ type PortfolioSummary struct {
 	UpdatedAt        time.Time
 }
 
-// HoldingSummary represents individual holding performance
+// HoldingSummary represents individual holding performance.
 type HoldingSummary struct {
 	Code          string
 	Name          string
@@ -41,7 +41,7 @@ type HoldingSummary struct {
 	LastUpdated   time.Time
 }
 
-// CalculatePortfolioSummary calculates portfolio performance
+// CalculatePortfolioSummary calculates portfolio performance.
 func (s *PortfolioService) CalculatePortfolioSummary(
 	portfolios []*models.Portfolio,
 	currentPrices map[string]float64,
@@ -97,7 +97,7 @@ func (s *PortfolioService) CalculatePortfolioSummary(
 	return summary
 }
 
-// GeneratePortfolioReport generates a formatted report
+// GeneratePortfolioReport generates a formatted report.
 func (s *PortfolioService) GeneratePortfolioReport(summary *PortfolioSummary) string {
 	if len(summary.Holdings) == 0 {
 		return "ポートフォリオにデータがありません"
@@ -142,7 +142,7 @@ func (s *PortfolioService) GeneratePortfolioReport(summary *PortfolioSummary) st
 	return report
 }
 
-// formatCurrency formats a float64 as Japanese currency with comma separators
+// formatCurrency formats a float64 as Japanese currency with comma separators.
 func formatCurrency(value float64) string {
 	// Round to 0 decimal places
 	rounded := math.Round(value)
@@ -166,7 +166,7 @@ func formatCurrency(value float64) string {
 	return formatted
 }
 
-// addCommaToNumber adds comma separators to a number string
+// addCommaToNumber adds comma separators to a number string.
 func addCommaToNumber(s string) string {
 	n := len(s)
 	if n <= 3 {
@@ -174,24 +174,28 @@ func addCommaToNumber(s string) string {
 	}
 
 	var result strings.Builder
+
 	for i, digit := range s {
 		if i > 0 && (n-i)%3 == 0 {
 			result.WriteString(",")
 		}
+
 		result.WriteRune(digit)
 	}
 
 	return result.String()
 }
 
-// ValidatePortfolio validates a portfolio entry
+// ValidatePortfolio validates a portfolio entry.
 func (s *PortfolioService) ValidatePortfolio(portfolio *models.Portfolio) error {
 	if portfolio.Code == "" {
 		return fmt.Errorf("銘柄コードは必須です")
 	}
+
 	if portfolio.Name == "" {
 		return fmt.Errorf("銘柄名は必須です")
 	}
+
 	if portfolio.Shares <= 0 {
 		return fmt.Errorf("保有株数は1以上である必要があります")
 	}
@@ -200,15 +204,16 @@ func (s *PortfolioService) ValidatePortfolio(portfolio *models.Portfolio) error 
 	if purchasePrice <= 0 {
 		return fmt.Errorf("購入価格は0より大きい必要があります")
 	}
+
 	return nil
 }
 
-// CalculateHoldingValue calculates the current value of a holding
+// CalculateHoldingValue calculates the current value of a holding.
 func (s *PortfolioService) CalculateHoldingValue(portfolio *models.Portfolio, currentPrice float64) float64 {
 	return float64(portfolio.Shares) * currentPrice
 }
 
-// CalculateHoldingReturn calculates the return rate of a holding
+// CalculateHoldingReturn calculates the return rate of a holding.
 func (s *PortfolioService) CalculateHoldingReturn(portfolio *models.Portfolio, currentPrice float64) float64 {
 	purchasePrice := s.decimalToFloat(portfolio.PurchasePrice)
 	if purchasePrice == 0 {
@@ -216,16 +221,20 @@ func (s *PortfolioService) CalculateHoldingReturn(portfolio *models.Portfolio, c
 	}
 
 	gain := currentPrice - purchasePrice
+
 	return (gain / purchasePrice) * 100
 }
 
-// decimalToFloat converts types.Decimal to float64
+// decimalToFloat converts types.Decimal to float64.
 func (s *PortfolioService) decimalToFloat(d any) float64 {
 	// This is a simplified conversion
 	// In a real implementation, you would use the actual decimal library methods
 	// For now, we'll assume it can be converted to string and then parsed
 	str := fmt.Sprintf("%v", d)
+
 	var f float64
+
 	fmt.Sscanf(str, "%f", &f)
+
 	return f
 }
