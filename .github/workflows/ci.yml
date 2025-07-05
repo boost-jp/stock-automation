@@ -97,7 +97,11 @@ jobs:
     - name: Install dependencies
       working-directory: ./backend
       run: go mod download
-
+      
+    - name: Install mysqldef
+      run: |
+        curl -L https://github.com/sqldef/sqldef/releases/download/v0.15.22/mysqldef_linux_amd64.tar.gz | tar xz
+        sudo mv mysqldef /usr/local/bin/
       
     - name: Setup test database
       working-directory: ./backend
@@ -108,8 +112,8 @@ jobs:
         DB_PASS: password
         TEST_DB_NAME: stock_automation_test
       run: |
-        mysql -h$DB_HOST -P$DB_PORT -u$DB_USER -p$DB_PASS -e "CREATE DATABASE IF NOT EXISTS $TEST_DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-        go tool mysqldef -h$DB_HOST -P$DB_PORT -u$DB_USER -p$DB_PASS $TEST_DB_NAME < schema.sql
+        mysql --host=$DB_HOST --port=$DB_PORT --user=$DB_USER --password=$DB_PASS --protocol=tcp -e "CREATE DATABASE IF NOT EXISTS $TEST_DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        mysqldef --host=$DB_HOST --port=$DB_PORT --user=$DB_USER --password=$DB_PASS $TEST_DB_NAME < schema.sql
       
     - name: Run unit tests
       working-directory: ./backend
