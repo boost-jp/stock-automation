@@ -16,6 +16,7 @@ type CollectDataUseCase struct {
 	stockRepo     repository.StockRepository
 	portfolioRepo repository.PortfolioRepository
 	stockClient   client.StockDataClient
+	maxWorkers    int
 }
 
 // NewCollectDataUseCase creates a new data collection use case.
@@ -28,6 +29,7 @@ func NewCollectDataUseCase(
 		stockRepo:     stockRepo,
 		portfolioRepo: portfolioRepo,
 		stockClient:   stockClient,
+		maxWorkers:    5, // Limit concurrent API calls
 	}
 }
 
@@ -75,19 +77,43 @@ func (uc *CollectDataUseCase) UpdatePricesForStocks(ctx context.Context, watchLi
 		stockCodes[item.Code] = true
 	}
 
-	// Update prices for all stocks
-	var wg sync.WaitGroup
+	// Create a channel for stock codes and a semaphore for limiting concurrency
+	codeChan := make(chan string, len(stockCodes))
 	for code := range stockCodes {
+		codeChan <- code
+	}
+	close(codeChan)
+
+	// Create worker pool
+	var wg sync.WaitGroup
+	errorChan := make(chan error, len(stockCodes))
+
+	for i := 0; i < uc.maxWorkers; i++ {
 		wg.Add(1)
-		go func(stockCode string) {
+		go func() {
 			defer wg.Done()
-			if err := uc.UpdateStockPrice(ctx, stockCode); err != nil {
-				logrus.Errorf("Failed to update price for %s: %v", stockCode, err)
+			for stockCode := range codeChan {
+				if err := uc.UpdateStockPrice(ctx, stockCode); err != nil {
+					logrus.Errorf("Failed to update price for %s: %v", stockCode, err)
+					errorChan <- err
+				}
 			}
-		}(code)
+		}()
 	}
 
 	wg.Wait()
+	close(errorChan)
+
+	// Check if there were any errors
+	var errors []error
+	for err := range errorChan {
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		logrus.Warnf("Encountered %d errors during price updates", len(errors))
+	}
+
 	return nil
 }
 
