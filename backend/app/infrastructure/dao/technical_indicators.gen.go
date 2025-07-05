@@ -20,8 +20,8 @@ import (
 	"github.com/aarondl/sqlboiler/v4/queries/qmhelper"
 	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/aarondl/strmangle"
-	cerrors "github.com/boost-jp/stock-automation/internal/errors"
-	errors "github.com/boost-jp/stock-automation/internal/errors/boilerrors"
+	cerrors "github.com/boost-jp/stock-automation/app/errors"
+	errors "github.com/boost-jp/stock-automation/app/errors/boilerrors"
 	"github.com/go-sql-driver/mysql"
 )
 

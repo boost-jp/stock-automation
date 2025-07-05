@@ -76,7 +76,7 @@ go mod init stock-automation
 
 # ディレクトリ構造作成
 mkdir -p cmd
-mkdir -p internal/{api,database,analysis,notification,models}
+mkdir -p app/{api,database,analysis,notification,models}
 mkdir -p configs
 mkdir -p data
 mkdir -p logs
@@ -251,8 +251,8 @@ import (
     "os/signal"
     "syscall"
     
-    "stock-automation/internal/database"
-    "stock-automation/internal/notification"
+    "stock-automation/app/database"
+    "stock-automation/app/notification"
     
     "github.com/joho/godotenv"
     "github.com/sirupsen/logrus"
@@ -305,7 +305,7 @@ func main() {
 }
 ```
 
-### 4.2 設定管理 (`internal/models/config.go`)
+### 4.2 設定管理 (`app/models/config.go`)
 ```go
 package models
 
@@ -377,7 +377,7 @@ go build -o stock-automation cmd/main.go
 package main
 
 import (
-    "stock-automation/internal/notification"
+    "stock-automation/app/notification"
     "github.com/joho/godotenv"
 )
 

@@ -20,7 +20,7 @@ Yahoo Finance APIを使用したリアルタイム株価データの取得・保
 
 ### データ構造定義
 
-#### `internal/models/stock.go`
+#### `app/models/stock.go`
 ```go
 package models
 
@@ -85,7 +85,7 @@ type WatchList struct {
 
 ### Yahoo Finance APIクライント
 
-#### `internal/api/yahoo_finance.go`
+#### `app/api/yahoo_finance.go`
 ```go
 package api
 
@@ -302,7 +302,7 @@ func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) 
 
 ### データ収集サービス
 
-#### `internal/api/data_collector.go`
+#### `app/api/data_collector.go`
 ```go
 package api
 
@@ -310,8 +310,8 @@ import (
     "sync"
     "time"
     
-    "stock-automation/internal/database"
-    "stock-automation/internal/models"
+    "stock-automation/app/database"
+    "stock-automation/app/models"
     
     "github.com/sirupsen/logrus"
 )
@@ -499,14 +499,14 @@ func (dc *DataCollector) ValidateData(price *models.StockPrice) bool {
 
 ### データベース操作
 
-#### `internal/database/stock_operations.go`
+#### `app/database/stock_operations.go`
 ```go
 package database
 
 import (
     "time"
     
-    "stock-automation/internal/models"
+    "stock-automation/app/models"
     
     "gorm.io/gorm"
 )
@@ -572,7 +572,7 @@ func (db *DB) CleanupOldData(days int) error {
 
 ### スケジューラー統合
 
-#### `internal/api/scheduler.go`
+#### `app/api/scheduler.go`
 ```go
 package api
 

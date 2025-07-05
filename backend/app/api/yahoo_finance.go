@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/boost-jp/stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/app/models"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"

@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/boost-jp/stock-automation/internal/database"
-	"github.com/boost-jp/stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/app/database"
+	"github.com/boost-jp/stock-automation/app/models"
 )
 
 func main() {

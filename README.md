@@ -56,7 +56,7 @@ go run cmd/main.go
 stock-automation/
 ├── cmd/
 │   └── main.go                 # メインプログラム
-├── internal/
+├── app/
 │   ├── api/                    # 外部API連携
 │   │   ├── yahoo_finance.go    # Yahoo Finance API
 │   │   ├── data_collector.go   # データ収集
@@ -135,11 +135,11 @@ watchList := models.WatchList{
 
 ### カスタム指標の実装
 
-`internal/analysis/` パッケージに新しい分析ロジックを追加可能
+`app/analysis/` パッケージに新しい分析ロジックを追加可能
 
 ### 通知方法の追加
 
-`internal/notification/` パッケージに新しい通知方法を実装可能
+`app/notification/` パッケージに新しい通知方法を実装可能
 
 ## 運用
 

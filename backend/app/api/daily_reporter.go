@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boost-jp/stock-automation/internal/analysis"
-	"github.com/boost-jp/stock-automation/internal/database"
-	"github.com/boost-jp/stock-automation/internal/notification"
+	"github.com/boost-jp/stock-automation/app/analysis"
+	"github.com/boost-jp/stock-automation/app/database"
+	"github.com/boost-jp/stock-automation/app/notification"
 
 	"github.com/sirupsen/logrus"
 )

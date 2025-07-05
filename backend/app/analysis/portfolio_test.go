@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/boost-jp/stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/app/models"
 
 	"github.com/stretchr/testify/assert"
 )

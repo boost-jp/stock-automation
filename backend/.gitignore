@@ -18,11 +18,6 @@ coverage.html
 vendor/
 pkg/
 
-# Go workspace file
-go.work
-
-# SQLBoiler generated files
-internal/models_generated/
 
 # IDE files
 .vscode/

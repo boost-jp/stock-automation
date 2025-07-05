@@ -81,7 +81,7 @@
 **工数**: 2日
 
 ### 作業内容
-- `internal/api/daily_reporter.go`の実装完了
+- `app/api/daily_reporter.go`の実装完了
 - スケジューラーとの連携実装
 - Slack通知の統合テスト
 
@@ -98,7 +98,7 @@
 **工数**: 2日
 
 ### 作業内容  
-- `internal/api/data_collector.go`の完全実装
+- `app/api/data_collector.go`の完全実装
 - Yahoo Finance APIとの安定連携
 - データベース保存の動作確認
 

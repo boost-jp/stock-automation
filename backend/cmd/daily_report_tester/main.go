@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/boost-jp/stock-automation/internal/api"
-	"github.com/boost-jp/stock-automation/internal/database"
-	"github.com/boost-jp/stock-automation/internal/notification"
+	"github.com/boost-jp/stock-automation/app/api"
+	"github.com/boost-jp/stock-automation/app/database"
+	"github.com/boost-jp/stock-automation/app/notification"
 )
 
 func main() {

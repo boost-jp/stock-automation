@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/boost-jp/stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/app/models"
 )
 
 // PortfolioSummary represents portfolio performance summary

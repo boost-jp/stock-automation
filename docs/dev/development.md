@@ -153,7 +153,7 @@ backend/
 ├── cmd/              # エントリーポイント
 │   ├── main.go      # メインアプリケーション
 │   └── test_*.go    # テスト用スクリプト
-├── internal/         # プライベートパッケージ
+├── app/         # プライベートパッケージ
 │   ├── analysis/    # 分析ロジック
 │   ├── api/         # API層
 │   ├── database/    # データベース層
@@ -269,7 +269,7 @@ go mod download
 go test -v ./...
 
 # 個別テスト実行
-go test -v ./internal/models
+go test -v ./app/models
 ```
 
 #### 4. Linterエラー

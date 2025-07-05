@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boost-jp/stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/app/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

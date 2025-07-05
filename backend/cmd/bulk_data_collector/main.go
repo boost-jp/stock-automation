@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/boost-jp/stock-automation/internal/api"
-	"github.com/boost-jp/stock-automation/internal/database"
-	"github.com/boost-jp/stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/app/api"
+	"github.com/boost-jp/stock-automation/app/database"
+	"github.com/boost-jp/stock-automation/app/models"
 
 	"gorm.io/gorm"
 )

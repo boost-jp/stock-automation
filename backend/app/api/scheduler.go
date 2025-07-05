@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"github.com/boost-jp/stock-automation/internal/notification"
+	"github.com/boost-jp/stock-automation/app/notification"
 
 	"github.com/go-co-op/gocron"
 	"github.com/sirupsen/logrus"

@@ -108,12 +108,12 @@ db-migrate: ## Apply database schema using mysqldef
 sqlboiler-generate: ## Generate SQLBoiler models
 	@echo "Generating SQLBoiler models..."
 	@echo "Step 1: Generate DAO package..."
-	@rm -rf internal/infrastructure/dao/*.go
-	@go tool sqlboiler mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional
+	@rm -rf app/infrastructure/dao/*.go
+	@go tool sqlboiler mysql -o app/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional
 	@echo "Step 2: Generate domain models..."
-	@go tool sqlboiler mysql -o internal/infrastructure/dto -p models --no-driver-templates --wipe --templates templates/sqlboiler/models
-	@mv -n internal/infrastructure/dto/*.go internal/domain/models 2>/dev/null || true
-	@rm -rf internal/infrastructure/dto/*.go
+	@go tool sqlboiler mysql -o app/infrastructure/dto -p models --no-driver-templates --wipe --templates templates/sqlboiler/models
+	@mv -n app/infrastructure/dto/*.go app/domain/models 2>/dev/null || true
+	@rm -rf app/infrastructure/dto/*.go
 
 migrate: db-migrate ## Run database migrations (alias for db-migrate)
 
@@ -122,7 +122,7 @@ clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
 	@rm -f $(BINARY_NAME) $(BINARY_NAME)-linux
 	@rm -f $(COVERAGE_FILE) coverage.html
-	@rm -rf internal/models_generated
+	@rm -rf app/models_generated
 	@go clean
 
 clean-all: clean docker-down ## Clean everything including Docker containers
