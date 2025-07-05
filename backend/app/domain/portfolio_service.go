@@ -41,7 +41,7 @@ type HoldingSummary struct {
 	LastUpdated   time.Time
 }
 
-// CalculatePortfolioSummary calculates portfolio performance.
+// CalculatePortfolioSummary calculates portfolio performance using domain model methods.
 func (s *PortfolioService) CalculatePortfolioSummary(
 	portfolios []*models.Portfolio,
 	currentPrices map[string]float64,
@@ -59,24 +59,18 @@ func (s *PortfolioService) CalculatePortfolioSummary(
 			continue // Skip if no current price available
 		}
 
-		// Convert types.Decimal to float64
-		purchasePrice := s.decimalToFloat(holding.PurchasePrice)
-
-		currentValue := float64(holding.Shares) * currentPrice
-		purchaseCost := float64(holding.Shares) * purchasePrice
-		gain := currentValue - purchaseCost
-
-		var gainPercent float64
-		if purchaseCost > 0 {
-			gainPercent = (gain / purchaseCost) * 100
-		}
+		// Use domain model methods for calculations
+		currentValue := holding.CalculateCurrentValue(currentPrice)
+		purchaseCost := holding.CalculatePurchaseCost()
+		gain := holding.CalculateGain(currentPrice)
+		gainPercent := holding.CalculateGainPercent(currentPrice)
 
 		holdingSummary := HoldingSummary{
 			Code:          holding.Code,
 			Name:          holding.Name,
 			Shares:        holding.Shares,
 			CurrentPrice:  currentPrice,
-			PurchasePrice: purchasePrice,
+			PurchasePrice: holding.GetPurchasePrice(),
 			CurrentValue:  currentValue,
 			PurchaseCost:  purchaseCost,
 			Gain:          gain,
@@ -186,55 +180,18 @@ func addCommaToNumber(s string) string {
 	return result.String()
 }
 
-// ValidatePortfolio validates a portfolio entry.
+// ValidatePortfolio validates a portfolio entry using domain model.
 func (s *PortfolioService) ValidatePortfolio(portfolio *models.Portfolio) error {
-	if portfolio.Code == "" {
-		return fmt.Errorf("銘柄コードは必須です")
-	}
-
-	if portfolio.Name == "" {
-		return fmt.Errorf("銘柄名は必須です")
-	}
-
-	if portfolio.Shares <= 0 {
-		return fmt.Errorf("保有株数は1以上である必要があります")
-	}
-
-	purchasePrice := s.decimalToFloat(portfolio.PurchasePrice)
-	if purchasePrice <= 0 {
-		return fmt.Errorf("購入価格は0より大きい必要があります")
-	}
-
-	return nil
+	return portfolio.Validate()
 }
 
-// CalculateHoldingValue calculates the current value of a holding.
+// CalculateHoldingValue calculates the current value of a holding using domain model.
 func (s *PortfolioService) CalculateHoldingValue(portfolio *models.Portfolio, currentPrice float64) float64 {
-	return float64(portfolio.Shares) * currentPrice
+	return portfolio.CalculateCurrentValue(currentPrice)
 }
 
-// CalculateHoldingReturn calculates the return rate of a holding.
+// CalculateHoldingReturn calculates the return rate of a holding using domain model.
 func (s *PortfolioService) CalculateHoldingReturn(portfolio *models.Portfolio, currentPrice float64) float64 {
-	purchasePrice := s.decimalToFloat(portfolio.PurchasePrice)
-	if purchasePrice == 0 {
-		return 0
-	}
-
-	gain := currentPrice - purchasePrice
-
-	return (gain / purchasePrice) * 100
+	return portfolio.CalculateGainPercent(currentPrice)
 }
 
-// decimalToFloat converts types.Decimal to float64.
-func (s *PortfolioService) decimalToFloat(d any) float64 {
-	// This is a simplified conversion
-	// In a real implementation, you would use the actual decimal library methods
-	// For now, we'll assume it can be converted to string and then parsed
-	str := fmt.Sprintf("%v", d)
-
-	var f float64
-
-	fmt.Sscanf(str, "%f", &f)
-
-	return f
-}

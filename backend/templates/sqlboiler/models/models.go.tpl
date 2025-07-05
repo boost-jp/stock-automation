@@ -6,8 +6,6 @@
 // You can edit this as you like.
 
 // {{$alias.UpSingular}} is an object representing the database table.
-// Set the "validate" tags as needed.
-// https://pkg.go.dev/gopkg.in/go-playground/validator.v10
 type {{$alias.UpSingular}} struct {
 	{{- range $column := .Table.Columns -}}
 	{{- $colAlias := $alias.Column $column.Name -}}

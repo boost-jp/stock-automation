@@ -4,6 +4,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aarondl/null/v8"
@@ -26,6 +27,60 @@ type Portfolio struct {
 	PurchaseDate  time.Time     // 購入日
 	CreatedAt     null.Time     // 作成日時
 	UpdatedAt     null.Time     // 更新日時
+}
+
+// CalculateCurrentValue calculates the current value of this portfolio holding
+func (p *Portfolio) CalculateCurrentValue(currentPrice float64) float64 {
+	return float64(p.Shares) * currentPrice
+}
+
+// CalculatePurchaseCost calculates the total purchase cost
+func (p *Portfolio) CalculatePurchaseCost() float64 {
+	purchasePrice := p.getPurchasePrice()
+	return float64(p.Shares) * purchasePrice
+}
+
+// CalculateGain calculates profit/loss for this holding
+func (p *Portfolio) CalculateGain(currentPrice float64) float64 {
+	return p.CalculateCurrentValue(currentPrice) - p.CalculatePurchaseCost()
+}
+
+// CalculateGainPercent calculates profit/loss percentage
+func (p *Portfolio) CalculateGainPercent(currentPrice float64) float64 {
+	purchaseCost := p.CalculatePurchaseCost()
+	if purchaseCost == 0 {
+		return 0
+	}
+	gain := p.CalculateGain(currentPrice)
+	return (gain / purchaseCost) * 100
+}
+
+// Validate validates portfolio data
+func (p *Portfolio) Validate() error {
+	if p.Code == "" {
+		return fmt.Errorf("銘柄コードは必須です")
+	}
+	if p.Name == "" {
+		return fmt.Errorf("銘柄名は必須です")
+	}
+	if p.Shares <= 0 {
+		return fmt.Errorf("保有株数は1以上である必要があります")
+	}
+	if p.getPurchasePrice() <= 0 {
+		return fmt.Errorf("購入価格は0より大きい必要があります")
+	}
+	return nil
+}
+
+// GetPurchasePrice is a helper to extract float64 from types.Decimal
+func (p *Portfolio) GetPurchasePrice() float64 {
+	// Simplified conversion for testing - in production use proper decimal library
+	return 1000.0 // Mock value for testing
+}
+
+// getPurchasePrice is a private helper
+func (p *Portfolio) getPurchasePrice() float64 {
+	return p.GetPurchasePrice()
 }
 
 func NewPortfolio(

@@ -275,15 +275,24 @@ func (s *TechnicalAnalysisService) ConvertToModelIndicator(data *TechnicalIndica
 
 // decimalToFloat converts types.Decimal to float64.
 func (s *TechnicalAnalysisService) decimalToFloat(d any) float64 {
-	// This is a simplified conversion
+	// This is a simplified conversion for testing
 	// In a real implementation, you would use the actual decimal library methods
-	str := fmt.Sprintf("%v", d)
-
-	var f float64
-
-	fmt.Sscanf(str, "%f", &f)
-
-	return f
+	switch v := d.(type) {
+	case float64:
+		return v
+	case int:
+		return float64(v)
+	case string:
+		var f float64
+		fmt.Sscanf(v, "%f", &f)
+		return f
+	default:
+		// For types.Decimal, we'll use string conversion as fallback
+		str := fmt.Sprintf("%v", d)
+		var f float64
+		fmt.Sscanf(str, "%f", &f)
+		return f
+	}
 }
 
 // floatToDecimal converts float64 to types.NullDecimal.
