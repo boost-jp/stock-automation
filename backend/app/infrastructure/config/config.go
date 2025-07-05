@@ -14,6 +14,7 @@ type Config struct {
 	Yahoo    YahooConfig    `json:"yahoo"`
 	Server   ServerConfig   `json:"server"`
 	Log      LogConfig      `json:"log"`
+	Slack    SlackConfig    `json:"slack"`
 }
 
 // DatabaseConfig holds database-related configuration.
@@ -53,6 +54,13 @@ type LogConfig struct {
 	OutputPath string `json:"output_path"`
 }
 
+// SlackConfig holds Slack notification configuration.
+type SlackConfig struct {
+	WebhookURL string `json:"webhook_url"`
+	Channel    string `json:"channel"`
+	Username   string `json:"username"`
+}
+
 // LoadConfig loads configuration from environment variables.
 func LoadConfig() *Config {
 	return &Config{
@@ -85,7 +93,19 @@ func LoadConfig() *Config {
 			Format:     getEnv("LOG_FORMAT", "json"),
 			OutputPath: getEnv("LOG_OUTPUT", "stdout"),
 		},
+		Slack: SlackConfig{
+			WebhookURL: getEnv("SLACK_WEBHOOK_URL", ""),
+			Channel:    getEnv("SLACK_CHANNEL", "#general"),
+			Username:   getEnv("SLACK_USERNAME", "Stock Bot"),
+		},
 	}
+}
+
+// Load loads configuration from file (for compatibility)
+func Load(path string) (*Config, error) {
+	// For now, just return LoadConfig() which loads from environment
+	// In the future, this could be extended to load from YAML/JSON files
+	return LoadConfig(), nil
 }
 
 // ToDatabaseConfig converts config to database.DatabaseConfig.
