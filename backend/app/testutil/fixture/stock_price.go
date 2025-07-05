@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/dao"
 	"github.com/oklog/ulid/v2"
 )
@@ -21,10 +22,10 @@ func NewStockPrice() *StockPriceBuilder {
 			ID:         ulid.MustNew(ulid.Now(), nil).String(),
 			Code:       "7203",
 			Date:       time.Now(),
-			OpenPrice:  2000.0,
-			HighPrice:  2100.0,
-			LowPrice:   1950.0,
-			ClosePrice: 2050.0,
+			OpenPrice:  client.FloatToDecimal(2000.0),
+			HighPrice:  client.FloatToDecimal(2100.0),
+			LowPrice:   client.FloatToDecimal(1950.0),
+			ClosePrice: client.FloatToDecimal(2050.0),
 			Volume:     1000000,
 		},
 	}
@@ -50,10 +51,10 @@ func (b *StockPriceBuilder) WithDate(date time.Time) *StockPriceBuilder {
 
 // WithPrices sets all price values at once
 func (b *StockPriceBuilder) WithPrices(open, high, low, close float64) *StockPriceBuilder {
-	b.stockPrice.OpenPrice = open
-	b.stockPrice.HighPrice = high
-	b.stockPrice.LowPrice = low
-	b.stockPrice.ClosePrice = close
+	b.stockPrice.OpenPrice = client.FloatToDecimal(open)
+	b.stockPrice.HighPrice = client.FloatToDecimal(high)
+	b.stockPrice.LowPrice = client.FloatToDecimal(low)
+	b.stockPrice.ClosePrice = client.FloatToDecimal(close)
 	return b
 }
 

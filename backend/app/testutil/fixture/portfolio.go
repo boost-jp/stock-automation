@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/dao"
 	"github.com/oklog/ulid/v2"
 )
@@ -22,7 +23,7 @@ func NewPortfolio() *PortfolioBuilder {
 			Code:          "7203",
 			Name:          "トヨタ自動車",
 			Shares:        100,
-			PurchasePrice: 2000.0,
+			PurchasePrice: client.FloatToDecimal(2000.0),
 			PurchaseDate:  time.Now(),
 		},
 	}
@@ -54,7 +55,7 @@ func (b *PortfolioBuilder) WithShares(shares int) *PortfolioBuilder {
 
 // WithPurchasePrice sets the purchase price
 func (b *PortfolioBuilder) WithPurchasePrice(price float64) *PortfolioBuilder {
-	b.portfolio.PurchasePrice = price
+	b.portfolio.PurchasePrice = client.FloatToDecimal(price)
 	return b
 }
 
