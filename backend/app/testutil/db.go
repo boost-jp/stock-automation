@@ -59,7 +59,7 @@ func NewTestDB(t *testing.T) *TestDB {
 		t.Fatalf("Failed to connect to test database: %v", err)
 	}
 
-	db := connMgr.GetDB().(*sql.DB)
+	db := connMgr.GetDB()
 
 	// Create schema
 	if err := createTestSchema(db); err != nil {
@@ -85,6 +85,11 @@ func NewTestDB(t *testing.T) *TestDB {
 
 // GetBoilDB returns a boil.ContextExecutor for SQLBoiler operations
 func (tdb *TestDB) GetBoilDB() boil.ContextExecutor {
+	return tdb.DB
+}
+
+// GetDB returns the underlying *sql.DB
+func (tdb *TestDB) GetDB() *sql.DB {
 	return tdb.DB
 }
 
