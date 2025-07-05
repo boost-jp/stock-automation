@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"stock-automation/internal/database"
-	"stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/internal/database"
+	"github.com/boost-jp/stock-automation/internal/models"
 
 	"github.com/sirupsen/logrus"
 )

@@ -15,17 +15,6 @@ help: ## Display help message
 	@echo "Available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-# Development Tools Installation
-install-tools: ## Install development tools
-	@echo "Installing development tools..."
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	@go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest || echo "gosec install failed, continuing..."
-	@go install golang.org/x/tools/cmd/goimports@latest
-	@go install github.com/swaggo/swag/cmd/swag@latest
-	@go install github.com/sqldef/sqldef/cmd/mysqldef@latest
-	@go install github.com/aarondl/sqlboiler/v4@latest
-	@echo "Development tools installed successfully"
-
 # Build
 build: ## Build the application
 	@echo "Building application..."
@@ -120,12 +109,12 @@ sqlboiler-generate: ## Generate SQLBoiler models
 	@echo "Generating SQLBoiler models..."
 	@echo "Step 1: Generate DAO package..."
 	@rm -rf internal/infrastructure/dao/*.go
-	@go run github.com/aarondl/sqlboiler/v4@latest mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional
+	@go tool sqlboiler mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional
 	@echo "Step 2: Generate domain models..."
-	@go run github.com/aarondl/sqlboiler/v4@latest mysql -o internal/infrastructure/dto -p models --no-driver-templates --wipe --templates templates/sqlboiler/models
+	@go tool sqlboiler mysql -o internal/infrastructure/dto -p models --no-driver-templates --wipe --templates templates/sqlboiler/models
 	@echo "Step 3: Move models to domain..."
-	@rm -fr internal/domain/models/*.base.go
-	@mv -n internal/infrastructure/dto/*.go internal/domain/models/ 2>/dev/null || true
+	@rm -fr internal/domain/*.base.go
+	@mv -n internal/infrastructure/dto/*.go internal/domain/ 2>/dev/null || true
 	@rm -rf internal/infrastructure/dto/*.go
 
 migrate: db-migrate ## Run database migrations (alias for db-migrate)

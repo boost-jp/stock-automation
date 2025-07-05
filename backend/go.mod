@@ -1,4 +1,4 @@
-module stock-automation
+module github.com/boost-jp/stock-automation
 
 go 1.24.4
 

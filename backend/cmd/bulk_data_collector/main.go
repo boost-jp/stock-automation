@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"stock-automation/internal/api"
-	"stock-automation/internal/database"
-	"stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/internal/api"
+	"github.com/boost-jp/stock-automation/internal/database"
+	"github.com/boost-jp/stock-automation/internal/models"
 	"sync"
 	"time"
 

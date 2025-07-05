@@ -2,7 +2,7 @@ package analysis
 
 import (
 	"fmt"
-	"stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/internal/models"
 	"strconv"
 	"strings"
 	"time"

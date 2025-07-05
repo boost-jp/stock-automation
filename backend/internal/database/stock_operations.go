@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"stock-automation/internal/models"
+	"github.com/boost-jp/stock-automation/internal/models"
 )
 
 // 株価データ保存

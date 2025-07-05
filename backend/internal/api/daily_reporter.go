@@ -2,9 +2,9 @@ package api
 
 import (
 	"fmt"
-	"stock-automation/internal/analysis"
-	"stock-automation/internal/database"
-	"stock-automation/internal/notification"
+	"github.com/boost-jp/stock-automation/internal/analysis"
+	"github.com/boost-jp/stock-automation/internal/database"
+	"github.com/boost-jp/stock-automation/internal/notification"
 	"time"
 
 	"github.com/sirupsen/logrus"

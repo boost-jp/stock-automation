@@ -5,7 +5,7 @@ package main
 
 import (
 	"log"
-	"stock-automation/internal/api"
+	"github.com/boost-jp/stock-automation/internal/api"
 )
 
 func main() {

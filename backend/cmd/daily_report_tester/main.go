@@ -2,9 +2,9 @@ package main
 
 import (
 	"log"
-	"stock-automation/internal/api"
-	"stock-automation/internal/database"
-	"stock-automation/internal/notification"
+	"github.com/boost-jp/stock-automation/internal/api"
+	"github.com/boost-jp/stock-automation/internal/database"
+	"github.com/boost-jp/stock-automation/internal/notification"
 )
 
 func main() {
