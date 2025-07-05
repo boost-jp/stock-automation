@@ -19,6 +19,8 @@ import (
 // mockStockDataClient implements client.StockDataClient for testing (external API mock)
 type mockStockDataClient struct{}
 
+var _ client.StockDataClient = (*mockStockDataClient)(nil)
+
 func (m *mockStockDataClient) GetCurrentPrice(stockCode string) (*models.StockPrice, error) {
 	return nil, nil
 }
@@ -40,6 +42,8 @@ type mockNotificationService struct {
 	lastTotalGain         float64
 	lastGainPercent       float64
 }
+
+var _ notification.NotificationService = (*mockNotificationService)(nil)
 
 func (m *mockNotificationService) SendMessage(message string) error {
 	m.sendMessageCalled = true
