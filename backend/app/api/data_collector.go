@@ -1,33 +1,35 @@
 package api
 
 import (
+	"context"
 	"sync"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/database"
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
+	"github.com/boost-jp/stock-automation/internal/repository"
 	"github.com/sirupsen/logrus"
 )
 
 type DataCollector struct {
-	yahooClient *YahooFinanceClient
-	db          *database.DB
-	watchList   []models.WatchList
-	portfolio   []models.Portfolio
-	mutex       sync.RWMutex
+	yahooClient  client.StockDataClient
+	repositories *repository.Repositories
+	watchList    []*models.WatchList
+	portfolio    []*models.Portfolio
+	mutex        sync.RWMutex
 }
 
-func NewDataCollector(db *database.DB) *DataCollector {
+func NewDataCollector(repos *repository.Repositories) *DataCollector {
 	return &DataCollector{
-		yahooClient: NewYahooFinanceClient(),
-		db:          db,
+		yahooClient:  client.NewYahooFinanceClient(),
+		repositories: repos,
 	}
 }
 
 // 監視銘柄リストの更新.
 func (dc *DataCollector) UpdateWatchList() error {
-	watchList, err := dc.db.GetActiveWatchList()
+	ctx := context.Background()
+	watchList, err := dc.repositories.Stock.GetActiveWatchList(ctx)
 	if err != nil {
 		return err
 	}
@@ -43,7 +45,8 @@ func (dc *DataCollector) UpdateWatchList() error {
 
 // ポートフォリオの更新.
 func (dc *DataCollector) UpdatePortfolio() error {
-	portfolio, err := dc.db.GetPortfolio()
+	ctx := context.Background()
+	portfolio, err := dc.repositories.Portfolio.GetAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -112,9 +115,10 @@ func (dc *DataCollector) updateSinglePrice(stockCode, stockName string) error {
 		return err
 	}
 
-	price.Name = stockName
+	// Note: Name field removed from StockPrice model
 
-	if err := dc.db.SaveStockPrice(price); err != nil {
+	ctx := context.Background()
+	if err := dc.repositories.Stock.SaveStockPrice(ctx, price); err != nil {
 		return err
 	}
 
@@ -156,11 +160,10 @@ func (dc *DataCollector) CollectHistoricalData(stockCode string, days int) error
 	}
 	dc.mutex.RUnlock()
 
-	for i := range prices {
-		prices[i].Name = stockName
-	}
+	// Note: Name field removed from StockPrice model
 
-	if err := dc.db.SaveStockPrices(prices); err != nil {
+	ctx := context.Background()
+	if err := dc.repositories.Stock.SaveStockPrices(ctx, prices); err != nil {
 		return err
 	}
 
