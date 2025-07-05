@@ -34,22 +34,18 @@ import (
 // Set the "validate" tags as needed.
 // https://pkg.go.dev/gopkg.in/go-playground/validator.v10
 type TechnicalIndicator struct {
-	ID            string            `validate:""`
-	Code          string            `validate:""` // 銘柄コード
-	Date          time.Time         `validate:""` // 計算日
-	Rsi14         types.NullDecimal `validate:""` // RSI(14日)
-	Macd          types.NullDecimal `validate:""` // MACD
-	MacdSignal    types.NullDecimal `validate:""` // MACDシグナル
-	MacdHistogram types.NullDecimal `validate:""` // MACDヒストグラム
-	Sma5          types.NullDecimal `validate:""` // 5日移動平均
-	Sma25         types.NullDecimal `validate:""` // 25日移動平均
-	Sma75         types.NullDecimal `validate:""` // 75日移動平均
-	CreatedAt     null.Time         `validate:""` // 作成日時
-	UpdatedAt     null.Time         `validate:""` // 更新日時
-}
-
-func (m *TechnicalIndicator) valid() error {
-	return validate.Struct(m)
+	ID            string
+	Code          string            // 銘柄コード
+	Date          time.Time         // 計算日
+	Rsi14         types.NullDecimal // RSI(14日)
+	Macd          types.NullDecimal // MACD
+	MacdSignal    types.NullDecimal // MACDシグナル
+	MacdHistogram types.NullDecimal // MACDヒストグラム
+	Sma5          types.NullDecimal // 5日移動平均
+	Sma25         types.NullDecimal // 25日移動平均
+	Sma75         types.NullDecimal // 75日移動平均
+	CreatedAt     null.Time         // 作成日時
+	UpdatedAt     null.Time         // 更新日時
 }
 
 func NewTechnicalIndicator(
@@ -65,7 +61,7 @@ func NewTechnicalIndicator(
 	Sma75 types.NullDecimal,
 	CreatedAt null.Time,
 	UpdatedAt null.Time,
-) (*TechnicalIndicator, error) {
+) *TechnicalIndicator {
 	do := &TechnicalIndicator{
 		ID:            ID,
 		Code:          Code,
@@ -80,8 +76,5 @@ func NewTechnicalIndicator(
 		CreatedAt:     CreatedAt,
 		UpdatedAt:     UpdatedAt,
 	}
-	if err := do.valid(); err != nil {
-		return nil, err
-	}
-	return do, nil
+	return do
 }

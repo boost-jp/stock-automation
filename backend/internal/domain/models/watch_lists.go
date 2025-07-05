@@ -34,18 +34,14 @@ import (
 // Set the "validate" tags as needed.
 // https://pkg.go.dev/gopkg.in/go-playground/validator.v10
 type WatchList struct {
-	ID              string            `validate:""`
-	Code            string            `validate:""` // 銘柄コード
-	Name            string            `validate:""` // 銘柄名
-	TargetBuyPrice  types.NullDecimal `validate:""` // 目標買い価格
-	TargetSellPrice types.NullDecimal `validate:""` // 目標売り価格
-	IsActive        null.Bool         `validate:""` // アクティブフラグ
-	CreatedAt       null.Time         `validate:""` // 作成日時
-	UpdatedAt       null.Time         `validate:""` // 更新日時
-}
-
-func (m *WatchList) valid() error {
-	return validate.Struct(m)
+	ID              string
+	Code            string            // 銘柄コード
+	Name            string            // 銘柄名
+	TargetBuyPrice  types.NullDecimal // 目標買い価格
+	TargetSellPrice types.NullDecimal // 目標売り価格
+	IsActive        null.Bool         // アクティブフラグ
+	CreatedAt       null.Time         // 作成日時
+	UpdatedAt       null.Time         // 更新日時
 }
 
 func NewWatchList(
@@ -57,7 +53,7 @@ func NewWatchList(
 	IsActive null.Bool,
 	CreatedAt null.Time,
 	UpdatedAt null.Time,
-) (*WatchList, error) {
+) *WatchList {
 	do := &WatchList{
 		ID:              ID,
 		Code:            Code,
@@ -68,8 +64,5 @@ func NewWatchList(
 		CreatedAt:       CreatedAt,
 		UpdatedAt:       UpdatedAt,
 	}
-	if err := do.valid(); err != nil {
-		return nil, err
-	}
-	return do, nil
+	return do
 }

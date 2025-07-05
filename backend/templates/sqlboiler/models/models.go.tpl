@@ -21,14 +21,11 @@ type {{$alias.UpSingular}} struct {
 	{{else if eq $.StructTagCasing "alias" -}}
 	{{$colAlias}} {{$column.Type}}
 	{{else -}}
-	{{$colAlias}} {{$column.Type}} `validate:""` {{ if ne $column.Comment ""}} // {{ $column.Comment }} {{ end }}
+	{{$colAlias}} {{$column.Type}} {{ if ne $column.Comment ""}} // {{ $column.Comment }} {{ end }}
 	{{end -}}
 	{{end -}}
 }
 
-func (m *{{$alias.UpSingular}}) valid() error {
-    return validate.Struct(m)
-}
 
 func New{{$alias.UpSingular}}( {{ printf "\n" }}
         {{- range $column := .Table.Columns -}}
@@ -39,7 +36,7 @@ func New{{$alias.UpSingular}}( {{ printf "\n" }}
         {{$colAlias}} {{$column.Type}}, {{ printf "\n" }}
         {{- end -}}
         {{- end -}}
-) (*{{$alias.UpSingular}}, error) {
+) (*{{$alias.UpSingular}}) {
     do := &{{$alias.UpSingular}}{ {{ printf "\n" }}
 {{- range $column := .Table.Columns -}}
         {{- $colAlias := $alias.Column $column.Name -}}
@@ -50,8 +47,5 @@ func New{{$alias.UpSingular}}( {{ printf "\n" }}
         {{- end -}}
         {{- end -}}
     }
-    if err := do.valid(); err != nil {
-        return nil, err
-    }
-    return do, nil
+    return do
 }

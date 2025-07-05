@@ -34,20 +34,16 @@ import (
 // Set the "validate" tags as needed.
 // https://pkg.go.dev/gopkg.in/go-playground/validator.v10
 type StockPrice struct {
-	ID         string        `validate:""`
-	Code       string        `validate:""` // 銘柄コード
-	Date       time.Time     `validate:""` // 取引日
-	OpenPrice  types.Decimal `validate:""` // 始値
-	HighPrice  types.Decimal `validate:""` // 高値
-	LowPrice   types.Decimal `validate:""` // 安値
-	ClosePrice types.Decimal `validate:""` // 終値
-	Volume     int64         `validate:""` // 出来高
-	CreatedAt  null.Time     `validate:""` // 作成日時
-	UpdatedAt  null.Time     `validate:""` // 更新日時
-}
-
-func (m *StockPrice) valid() error {
-	return validate.Struct(m)
+	ID         string
+	Code       string        // 銘柄コード
+	Date       time.Time     // 取引日
+	OpenPrice  types.Decimal // 始値
+	HighPrice  types.Decimal // 高値
+	LowPrice   types.Decimal // 安値
+	ClosePrice types.Decimal // 終値
+	Volume     int64         // 出来高
+	CreatedAt  null.Time     // 作成日時
+	UpdatedAt  null.Time     // 更新日時
 }
 
 func NewStockPrice(
@@ -61,7 +57,7 @@ func NewStockPrice(
 	Volume int64,
 	CreatedAt null.Time,
 	UpdatedAt null.Time,
-) (*StockPrice, error) {
+) *StockPrice {
 	do := &StockPrice{
 		ID:         ID,
 		Code:       Code,
@@ -74,8 +70,5 @@ func NewStockPrice(
 		CreatedAt:  CreatedAt,
 		UpdatedAt:  UpdatedAt,
 	}
-	if err := do.valid(); err != nil {
-		return nil, err
-	}
-	return do, nil
+	return do
 }

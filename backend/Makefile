@@ -112,9 +112,7 @@ sqlboiler-generate: ## Generate SQLBoiler models
 	@go tool sqlboiler mysql -o internal/infrastructure/dao -p dao --no-driver-templates --wipe --templates templates/sqlboiler/main --templates templates/sqlboiler/additional
 	@echo "Step 2: Generate domain models..."
 	@go tool sqlboiler mysql -o internal/infrastructure/dto -p models --no-driver-templates --wipe --templates templates/sqlboiler/models
-	@echo "Step 3: Move models to domain..."
-	@rm -fr internal/domain/*.base.go
-	@mv -n internal/infrastructure/dto/*.go internal/domain/ 2>/dev/null || true
+	@mv -n internal/infrastructure/dto/*.go internal/domain/models 2>/dev/null || true
 	@rm -rf internal/infrastructure/dto/*.go
 
 migrate: db-migrate ## Run database migrations (alias for db-migrate)
