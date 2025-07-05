@@ -58,7 +58,13 @@
       "Bash(go build:*)",
       "Bash(go fmt:*)",
       "Bash(go vet:*)",
-      "Bash(gh pr list:*)"
+      "Bash(gh pr list:*)",
+      "Bash(backend/go mod tidy:*)",
+      "Bash(backend/go fmt ./app/domain/)",
+      "Bash(backend/go build ./app/domain/)",
+      "Bash(export GOPATH=/tmp/gopath)",
+      "Bash(export:*)",
+      "Bash(go test:*)"
     ],
     "deny": []
   }
