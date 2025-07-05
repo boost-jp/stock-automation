@@ -6,13 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aarondl/null/v8"
-	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/boost-jp/stock-automation/app/analysis"
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/google/go-cmp/cmp"
-	"github.com/shopspring/decimal"
 )
 
 // Mock implementations for testing
@@ -20,43 +17,71 @@ type mockStockRepository struct {
 	getLatestPriceFunc func(ctx context.Context, code string) (*models.StockPrice, error)
 }
 
-func (m *mockStockRepository) BulkInsertStockPrices(ctx context.Context, prices []*models.StockPrice) error {
+func (m *mockStockRepository) SaveStockPrice(ctx context.Context, price *models.StockPrice) error {
 	return nil
 }
 
-func (m *mockStockRepository) GetAll(ctx context.Context) ([]*models.WatchList, error) {
-	return nil, nil
-}
-
-func (m *mockStockRepository) AddWatchItem(ctx context.Context, code, name string) error {
+func (m *mockStockRepository) SaveStockPrices(ctx context.Context, prices []*models.StockPrice) error {
 	return nil
 }
 
-func (m *mockStockRepository) RemoveWatchItem(ctx context.Context, code string) error {
-	return nil
-}
-
-func (m *mockStockRepository) GetLatestPrice(ctx context.Context, code string) (*models.StockPrice, error) {
+func (m *mockStockRepository) GetLatestPrice(ctx context.Context, stockCode string) (*models.StockPrice, error) {
 	if m.getLatestPriceFunc != nil {
-		return m.getLatestPriceFunc(ctx, code)
+		return m.getLatestPriceFunc(ctx, stockCode)
 	}
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockStockRepository) SaveTechnicalIndicators(ctx context.Context, indicators []*models.TechnicalIndicator) error {
+func (m *mockStockRepository) GetPriceHistory(ctx context.Context, stockCode string, days int) ([]*models.StockPrice, error) {
+	return nil, nil
+}
+
+func (m *mockStockRepository) CleanupOldData(ctx context.Context, days int) error {
 	return nil
 }
 
-func (m *mockStockRepository) GetTechnicalIndicator(ctx context.Context, code string, indicatorType string, date time.Time) (*models.TechnicalIndicator, error) {
+func (m *mockStockRepository) SaveTechnicalIndicator(ctx context.Context, indicator *models.TechnicalIndicator) error {
+	return nil
+}
+
+func (m *mockStockRepository) GetLatestTechnicalIndicator(ctx context.Context, stockCode string) (*models.TechnicalIndicator, error) {
 	return nil, nil
 }
 
-func (m *mockStockRepository) GetHistoricalPrices(ctx context.Context, code string, startDate, endDate time.Time) ([]*models.StockPrice, error) {
+func (m *mockStockRepository) GetActiveWatchList(ctx context.Context) ([]*models.WatchList, error) {
 	return nil, nil
+}
+
+func (m *mockStockRepository) GetWatchListItem(ctx context.Context, id string) (*models.WatchList, error) {
+	return nil, nil
+}
+
+func (m *mockStockRepository) AddToWatchList(ctx context.Context, item *models.WatchList) error {
+	return nil
+}
+
+func (m *mockStockRepository) UpdateWatchList(ctx context.Context, item *models.WatchList) error {
+	return nil
+}
+
+func (m *mockStockRepository) DeleteFromWatchList(ctx context.Context, id string) error {
+	return nil
 }
 
 type mockPortfolioRepository struct {
 	getAllFunc func(ctx context.Context) ([]*models.Portfolio, error)
+}
+
+func (m *mockPortfolioRepository) Create(ctx context.Context, portfolio *models.Portfolio) error {
+	return nil
+}
+
+func (m *mockPortfolioRepository) GetByID(ctx context.Context, id string) (*models.Portfolio, error) {
+	return nil, nil
+}
+
+func (m *mockPortfolioRepository) GetByCode(ctx context.Context, code string) (*models.Portfolio, error) {
+	return nil, nil
 }
 
 func (m *mockPortfolioRepository) GetAll(ctx context.Context) ([]*models.Portfolio, error) {
@@ -66,29 +91,33 @@ func (m *mockPortfolioRepository) GetAll(ctx context.Context) ([]*models.Portfol
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockPortfolioRepository) Add(ctx context.Context, portfolio *models.Portfolio) error {
+func (m *mockPortfolioRepository) Update(ctx context.Context, portfolio *models.Portfolio) error {
 	return nil
 }
 
-func (m *mockPortfolioRepository) Remove(ctx context.Context, code string) error {
+func (m *mockPortfolioRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (m *mockPortfolioRepository) Update(ctx context.Context, code string, shares int, purchasePrice float64) error {
-	return nil
+func (m *mockPortfolioRepository) GetTotalValue(ctx context.Context, currentPrices map[string]float64) (float64, error) {
+	return 0, nil
+}
+
+func (m *mockPortfolioRepository) GetHoldingsByCode(ctx context.Context, codes []string) ([]*models.Portfolio, error) {
+	return nil, nil
 }
 
 type mockStockDataClient struct{}
 
-func (m *mockStockDataClient) GetStockPrice(code string) (*client.StockData, error) {
+func (m *mockStockDataClient) GetCurrentPrice(stockCode string) (*models.StockPrice, error) {
 	return nil, nil
 }
 
-func (m *mockStockDataClient) GetBulkPrices(codes []string) (map[string]*client.StockData, error) {
+func (m *mockStockDataClient) GetHistoricalData(stockCode string, days int) ([]*models.StockPrice, error) {
 	return nil, nil
 }
 
-func (m *mockStockDataClient) GetHistoricalData(code string, startDate, endDate time.Time) ([]*client.HistoricalData, error) {
+func (m *mockStockDataClient) GetIntradayData(stockCode string, interval string) ([]*models.StockPrice, error) {
 	return nil, nil
 }
 
@@ -111,6 +140,10 @@ func (m *mockNotificationService) SendDailyReport(totalValue, totalGain, gainPer
 	return nil
 }
 
+func (m *mockNotificationService) SendStockAlert(stockCode string, stockName string, currentPrice float64, changePercent float64, alertType string) error {
+	return nil
+}
+
 func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 	tests := []struct {
 		name                string
@@ -129,14 +162,14 @@ func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 					Code:          "7203",
 					Name:          "トヨタ自動車",
 					Shares:        100,
-					PurchasePrice: types.NewDecimal(decimal.NewFromFloat(2000.0)),
+					PurchasePrice: client.FloatToDecimal(2000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
 			stockPrices: map[string]*models.StockPrice{
 				"7203": {
 					Code:       "7203",
-					ClosePrice: types.NewDecimal(decimal.NewFromFloat(2200.0)),
+					ClosePrice: client.FloatToDecimal(2200.0),
 					Date:       time.Now(),
 				},
 			},
@@ -153,14 +186,14 @@ func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 					Code:          "9983",
 					Name:          "ファーストリテイリング",
 					Shares:        50,
-					PurchasePrice: types.NewDecimal(decimal.NewFromFloat(50000.0)),
+					PurchasePrice: client.FloatToDecimal(50000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
 			stockPrices: map[string]*models.StockPrice{
 				"9983": {
 					Code:       "9983",
-					ClosePrice: types.NewDecimal(decimal.NewFromFloat(48000.0)),
+					ClosePrice: client.FloatToDecimal(48000.0),
 					Date:       time.Now(),
 				},
 			},
@@ -184,7 +217,7 @@ func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 					Code:          "1111",
 					Name:          "Missing Stock",
 					Shares:        100,
-					PurchasePrice: types.NewDecimal(decimal.NewFromFloat(1000.0)),
+					PurchasePrice: client.FloatToDecimal(1000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
@@ -270,26 +303,26 @@ func TestPortfolioReportUseCase_GenerateComprehensiveDailyReport(t *testing.T) {
 					Code:          "7203",
 					Name:          "トヨタ自動車",
 					Shares:        100,
-					PurchasePrice: types.NewDecimal(decimal.NewFromFloat(2000.0)),
+					PurchasePrice: client.FloatToDecimal(2000.0),
 					PurchaseDate:  time.Now(),
 				},
 				{
 					Code:          "9983",
 					Name:          "ファーストリテイリング",
 					Shares:        50,
-					PurchasePrice: types.NewDecimal(decimal.NewFromFloat(50000.0)),
+					PurchasePrice: client.FloatToDecimal(50000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
 			stockPrices: map[string]*models.StockPrice{
 				"7203": {
 					Code:       "7203",
-					ClosePrice: types.NewDecimal(decimal.NewFromFloat(2200.0)),
+					ClosePrice: client.FloatToDecimal(2200.0),
 					Date:       time.Now(),
 				},
 				"9983": {
 					Code:       "9983",
-					ClosePrice: types.NewDecimal(decimal.NewFromFloat(48000.0)),
+					ClosePrice: client.FloatToDecimal(48000.0),
 					Date:       time.Now(),
 				},
 			},
@@ -318,13 +351,13 @@ func TestPortfolioReportUseCase_GenerateComprehensiveDailyReport(t *testing.T) {
 					Code:          "1111",
 					Name:          "エラー銘柄",
 					Shares:        100,
-					PurchasePrice: types.NewDecimal(decimal.NewFromFloat(1000.0)),
+					PurchasePrice: client.FloatToDecimal(1000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
 			stockPrices: map[string]*models.StockPrice{},
 			expectedContains: []string{
-				"📊 ポートフォリオレポート",
+				"ポートフォリオにデータがありません",
 				"⚠️ 価格取得エラー:",
 				"エラー銘柄 (1111): 価格取得エラー",
 			},
@@ -360,7 +393,7 @@ func TestPortfolioReportUseCase_GenerateComprehensiveDailyReport(t *testing.T) {
 			if !tt.wantErr {
 				for _, expected := range tt.expectedContains {
 					if !contains(report, expected) {
-						t.Errorf("report does not contain expected string: %s", expected)
+						t.Errorf("report does not contain expected string: %s\nActual report:\n%s", expected, report)
 					}
 				}
 			}
@@ -383,14 +416,14 @@ func TestPortfolioReportUseCase_GetPortfolioStatistics(t *testing.T) {
 					Code:          "7203",
 					Name:          "トヨタ自動車",
 					Shares:        100,
-					PurchasePrice: types.NewDecimal(decimal.NewFromFloat(2000.0)),
+					PurchasePrice: client.FloatToDecimal(2000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
 			stockPrices: map[string]*models.StockPrice{
 				"7203": {
 					Code:       "7203",
-					ClosePrice: types.NewDecimal(decimal.NewFromFloat(2200.0)),
+					ClosePrice: client.FloatToDecimal(2200.0),
 					Date:       time.Now(),
 				},
 			},
