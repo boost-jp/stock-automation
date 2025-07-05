@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/models"
+	"github.com/boost-jp/stock-automation/app/domain/models"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 )
 
 // PortfolioSummary represents portfolio performance summary.
@@ -47,7 +48,8 @@ func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[s
 		}
 
 		currentValue := float64(holding.Shares) * currentPrice
-		purchaseCost := float64(holding.Shares) * holding.PurchasePrice
+		purchasePrice := client.DecimalToFloat(holding.PurchasePrice)
+		purchaseCost := float64(holding.Shares) * purchasePrice
 		gain := currentValue - purchaseCost
 		gainPercent := (gain / purchaseCost) * 100
 
@@ -56,7 +58,7 @@ func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[s
 			Name:          holding.Name,
 			Shares:        holding.Shares,
 			CurrentPrice:  currentPrice,
-			PurchasePrice: holding.PurchasePrice,
+			PurchasePrice: purchasePrice,
 			CurrentValue:  currentValue,
 			PurchaseCost:  purchaseCost,
 			Gain:          gain,

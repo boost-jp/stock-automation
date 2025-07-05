@@ -1,4 +1,4 @@
-package api
+package client
 
 import (
 	"encoding/json"
@@ -6,11 +6,19 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/models"
+	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
 )
 
+// StockDataClient defines the interface for stock data providers.
+type StockDataClient interface {
+	GetCurrentPrice(stockCode string) (*models.StockPrice, error)
+	GetHistoricalData(stockCode string, days int) ([]*models.StockPrice, error)
+	GetIntradayData(stockCode string, interval string) ([]*models.StockPrice, error)
+}
+
+// YahooFinanceClient implements StockDataClient using Yahoo Finance API.
 type YahooFinanceClient struct {
 	client  *resty.Client
 	baseURL string
@@ -46,6 +54,7 @@ type YahooFinanceResponse struct {
 	} `json:"chart"`
 }
 
+// NewYahooFinanceClient creates a new Yahoo Finance client.
 func NewYahooFinanceClient() *YahooFinanceClient {
 	client := resty.New()
 	client.SetTimeout(30 * time.Second)
@@ -64,7 +73,7 @@ func NewYahooFinanceClient() *YahooFinanceClient {
 	}
 }
 
-// リアルタイム株価取得.
+// GetCurrentPrice retrieves real-time stock price.
 func (y *YahooFinanceClient) GetCurrentPrice(stockCode string) (*models.StockPrice, error) {
 	url := fmt.Sprintf("%s/v8/finance/chart/%s.T", y.baseURL, stockCode)
 
@@ -92,26 +101,25 @@ func (y *YahooFinanceClient) GetCurrentPrice(stockCode string) (*models.StockPri
 	meta := result.Meta
 
 	stockPrice := &models.StockPrice{
-		Code:      stockCode,
-		Price:     meta.RegularMarketPrice,
-		Volume:    meta.RegularMarketVolume,
-		High:      meta.RegularMarketDayHigh,
-		Low:       meta.RegularMarketDayLow,
-		Open:      meta.RegularMarketOpen,
-		Close:     meta.RegularMarketPrice,
-		Timestamp: time.Now(),
+		Code:       stockCode,
+		Date:       time.Now(),
+		OpenPrice:  floatToDecimal(meta.RegularMarketOpen),
+		HighPrice:  floatToDecimal(meta.RegularMarketDayHigh),
+		LowPrice:   floatToDecimal(meta.RegularMarketDayLow),
+		ClosePrice: floatToDecimal(meta.RegularMarketPrice),
+		Volume:     meta.RegularMarketVolume,
 	}
 
 	logrus.WithFields(logrus.Fields{
 		"code":  stockCode,
-		"price": stockPrice.Price,
+		"price": stockPrice.ClosePrice,
 	}).Debug("Yahoo Finance current price fetched")
 
 	return stockPrice, nil
 }
 
-// 履歴データ取得.
-func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]models.StockPrice, error) {
+// GetHistoricalData retrieves historical stock price data.
+func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]*models.StockPrice, error) {
 	endTime := time.Now().Unix()
 	startTime := time.Now().AddDate(0, 0, -days).Unix()
 
@@ -153,7 +161,7 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 
 	quotes := result.Indicators.Quote[0]
 
-	var prices []models.StockPrice
+	var prices []*models.StockPrice
 
 	for i, ts := range timestamps {
 		// Skip invalid or missing data points
@@ -167,15 +175,14 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 			continue
 		}
 
-		price := models.StockPrice{
-			Code:      stockCode,
-			Open:      quotes.Open[i],
-			High:      quotes.High[i],
-			Low:       quotes.Low[i],
-			Close:     quotes.Close[i],
-			Price:     quotes.Close[i],
-			Volume:    quotes.Volume[i],
-			Timestamp: time.Unix(ts, 0),
+		price := &models.StockPrice{
+			Code:       stockCode,
+			Date:       time.Unix(ts, 0),
+			OpenPrice:  floatToDecimal(quotes.Open[i]),
+			HighPrice:  floatToDecimal(quotes.High[i]),
+			LowPrice:   floatToDecimal(quotes.Low[i]),
+			ClosePrice: floatToDecimal(quotes.Close[i]),
+			Volume:     quotes.Volume[i],
 		}
 
 		prices = append(prices, price)
@@ -189,8 +196,8 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 	return prices, nil
 }
 
-// 分足データ取得.
-func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) ([]models.StockPrice, error) {
+// GetIntradayData retrieves intraday stock price data.
+func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) ([]*models.StockPrice, error) {
 	url := fmt.Sprintf("%s/v8/finance/chart/%s.T", y.baseURL, stockCode)
 
 	resp, err := y.client.R().
@@ -217,22 +224,21 @@ func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) 
 	timestamps := result.Timestamp
 	quotes := result.Indicators.Quote[0]
 
-	var prices []models.StockPrice
+	var prices []*models.StockPrice
 
 	for i, ts := range timestamps {
 		if i >= len(quotes.Close) || quotes.Close[i] == 0 {
 			continue
 		}
 
-		price := models.StockPrice{
-			Code:      stockCode,
-			Open:      quotes.Open[i],
-			High:      quotes.High[i],
-			Low:       quotes.Low[i],
-			Close:     quotes.Close[i],
-			Price:     quotes.Close[i],
-			Volume:    quotes.Volume[i],
-			Timestamp: time.Unix(ts, 0),
+		price := &models.StockPrice{
+			Code:       stockCode,
+			Date:       time.Unix(ts, 0),
+			OpenPrice:  floatToDecimal(quotes.Open[i]),
+			HighPrice:  floatToDecimal(quotes.High[i]),
+			LowPrice:   floatToDecimal(quotes.Low[i]),
+			ClosePrice: floatToDecimal(quotes.Close[i]),
+			Volume:     quotes.Volume[i],
 		}
 
 		prices = append(prices, price)

@@ -9,7 +9,7 @@ import (
 
 	"github.com/boost-jp/stock-automation/app/api"
 	"github.com/boost-jp/stock-automation/app/database"
-	"github.com/boost-jp/stock-automation/app/models"
+	"github.com/boost-jp/stock-automation/app/domain/models"
 	"gorm.io/gorm"
 )
 
@@ -42,10 +42,10 @@ func (bdc *BulkDataCollector) CollectHistoricalData(ctx context.Context, stockCo
 
 		// Check if we already have recent data for this stock
 		var latestRecord models.StockPrice
-		err := bdc.db.Where("code = ?", code).Order("timestamp DESC").First(&latestRecord).Error
+		err := bdc.db.Where("code = ?", code).Order("date DESC").First(&latestRecord).Error
 
-		if err == nil && latestRecord.Timestamp.After(startDate) {
-			log.Printf("✅ %s: 既存データあり (最新: %s)", code, latestRecord.Timestamp.Format("2006-01-02"))
+		if err == nil && latestRecord.Date.After(startDate) {
+			log.Printf("✅ %s: 既存データあり (最新: %s)", code, latestRecord.Date.Format("2006-01-02"))
 
 			continue
 		}
@@ -105,10 +105,10 @@ func (bdc *BulkDataCollector) CollectHistoricalDataParallel(ctx context.Context,
 
 			// Check if we already have recent data for this stock
 			var latestRecord models.StockPrice
-			err := bdc.db.Where("code = ?", stockCode).Order("timestamp DESC").First(&latestRecord).Error
+			err := bdc.db.Where("code = ?", stockCode).Order("date DESC").First(&latestRecord).Error
 
-			if err == nil && latestRecord.Timestamp.After(startDate) {
-				log.Printf("✅ %s: 既存データあり (最新: %s)", stockCode, latestRecord.Timestamp.Format("2006-01-02"))
+			if err == nil && latestRecord.Date.After(startDate) {
+				log.Printf("✅ %s: 既存データあり (最新: %s)", stockCode, latestRecord.Date.Format("2006-01-02"))
 				results <- nil
 
 				return
@@ -247,8 +247,8 @@ func (bdc *BulkDataCollector) upsertStockPrices(stockPrices []models.StockPrice)
 		if err != nil {
 			// Fallback to individual upserts if batch fails
 			for _, price := range batch {
-				err = bdc.db.Where("code = ? AND DATE(timestamp) = DATE(?)",
-					price.Code, price.Timestamp).
+				err = bdc.db.Where("code = ? AND DATE(date) = DATE(?)",
+					price.Code, price.Date).
 					Assign(price).
 					FirstOrCreate(&price).Error
 				if err != nil {

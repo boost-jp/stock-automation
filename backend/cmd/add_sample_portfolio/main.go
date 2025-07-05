@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/database"
-	"github.com/boost-jp/stock-automation/app/models"
+	"github.com/boost-jp/stock-automation/app/domain/models"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 )
 
 func main() {
@@ -24,21 +25,21 @@ func main() {
 			Code:          "7203",
 			Name:          "トヨタ自動車",
 			Shares:        100,
-			PurchasePrice: 2800.0,
+			PurchasePrice: client.FloatToDecimal(2800.0),
 			PurchaseDate:  time.Now().AddDate(0, -2, 0), // 2ヶ月前
 		},
 		{
 			Code:          "6758",
 			Name:          "ソニーグループ",
 			Shares:        50,
-			PurchasePrice: 12000.0,
+			PurchasePrice: client.FloatToDecimal(12000.0),
 			PurchaseDate:  time.Now().AddDate(0, -1, -15), // 1ヶ月15日前
 		},
 		{
 			Code:          "9984",
 			Name:          "ソフトバンクグループ",
 			Shares:        80,
-			PurchasePrice: 5500.0,
+			PurchasePrice: client.FloatToDecimal(5500.0),
 			PurchaseDate:  time.Now().AddDate(0, -3, -10), // 3ヶ月10日前
 		},
 	}

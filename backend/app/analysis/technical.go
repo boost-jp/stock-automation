@@ -3,7 +3,8 @@ package analysis
 import (
 	"math"
 
-	"github.com/boost-jp/stock-automation/app/models"
+	"github.com/boost-jp/stock-automation/app/domain/models"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 )
 
 // MovingAverage calculates simple moving average.
@@ -14,7 +15,7 @@ func MovingAverage(prices []models.StockPrice, period int) float64 {
 
 	sum := 0.0
 	for i := len(prices) - period; i < len(prices); i++ {
-		sum += prices[i].Close
+		sum += client.DecimalToFloat(prices[i].ClosePrice)
 	}
 
 	return sum / float64(period)
@@ -31,7 +32,7 @@ func RSI(prices []models.StockPrice, period int) float64 {
 
 	// 最初のperiod分を計算
 	for i := 1; i <= period; i++ {
-		change := prices[len(prices)-i].Close - prices[len(prices)-i-1].Close
+		change := client.DecimalToFloat(prices[len(prices)-i].ClosePrice) - client.DecimalToFloat(prices[len(prices)-i-1].ClosePrice)
 		if change > 0 {
 			gains += change
 		} else {
@@ -65,10 +66,10 @@ func MACD(prices []models.StockPrice, fastPeriod, slowPeriod, signalPeriod int) 
 		}
 
 		multiplier := 2.0 / (float64(period) + 1.0)
-		ema := data[0].Close
+		ema := client.DecimalToFloat(data[0].ClosePrice)
 
 		for i := 1; i < len(data); i++ {
-			ema = (data[i].Close * multiplier) + (ema * (1 - multiplier))
+			ema = (client.DecimalToFloat(data[i].ClosePrice) * multiplier) + (ema * (1 - multiplier))
 		}
 
 		return ema
@@ -99,15 +100,18 @@ func CalculateAllIndicators(prices []models.StockPrice) *models.TechnicalIndicat
 	lastPrice := prices[len(prices)-1]
 
 	indicator := &models.TechnicalIndicator{
-		Code:      lastPrice.Code,
-		MA5:       MovingAverage(prices, 5),
-		MA25:      MovingAverage(prices, 25),
-		MA75:      MovingAverage(prices, 75),
-		RSI:       RSI(prices, 14),
-		Timestamp: lastPrice.Timestamp,
+		Code:  lastPrice.Code,
+		Date:  lastPrice.Date,
+		Sma5:  client.FloatToNullDecimal(MovingAverage(prices, 5)),
+		Sma25: client.FloatToNullDecimal(MovingAverage(prices, 25)),
+		Sma75: client.FloatToNullDecimal(MovingAverage(prices, 75)),
+		Rsi14: client.FloatToNullDecimal(RSI(prices, 14)),
 	}
 
-	indicator.MACD, indicator.Signal, indicator.Histogram = MACD(prices, 12, 26, 9)
+	macd, signal, histogram := MACD(prices, 12, 26, 9)
+	indicator.Macd = client.FloatToNullDecimal(macd)
+	indicator.MacdSignal = client.FloatToNullDecimal(signal)
+	indicator.MacdHistogram = client.FloatToNullDecimal(histogram)
 
 	return indicator
 }
@@ -126,44 +130,51 @@ func GenerateTradingSignal(indicator *models.TechnicalIndicator, currentPrice fl
 	reasons := []string{}
 
 	// RSI based signals
-	if indicator.RSI < 30 {
+	rsi := client.NullDecimalToFloat(indicator.Rsi14)
+	if rsi < 30 {
 		score += 2.0
 
 		reasons = append(reasons, "RSI oversold")
-	} else if indicator.RSI > 70 {
+	} else if rsi > 70 {
 		score -= 2.0
 
 		reasons = append(reasons, "RSI overbought")
 	}
 
 	// Moving Average signals
-	if indicator.MA5 > indicator.MA25 && indicator.MA25 > indicator.MA75 {
+	ma5 := client.NullDecimalToFloat(indicator.Sma5)
+	ma25 := client.NullDecimalToFloat(indicator.Sma25)
+	ma75 := client.NullDecimalToFloat(indicator.Sma75)
+	if ma5 > ma25 && ma25 > ma75 {
 		score += 1.5
 
 		reasons = append(reasons, "Bullish MA alignment")
-	} else if indicator.MA5 < indicator.MA25 && indicator.MA25 < indicator.MA75 {
+	} else if ma5 < ma25 && ma25 < ma75 {
 		score -= 1.5
 
 		reasons = append(reasons, "Bearish MA alignment")
 	}
 
 	// MACD signals
-	if indicator.MACD > indicator.Signal && indicator.Histogram > 0 {
+	macd := client.NullDecimalToFloat(indicator.Macd)
+	signal := client.NullDecimalToFloat(indicator.MacdSignal)
+	histogram := client.NullDecimalToFloat(indicator.MacdHistogram)
+	if macd > signal && histogram > 0 {
 		score += 1.0
 
 		reasons = append(reasons, "MACD bullish")
-	} else if indicator.MACD < indicator.Signal && indicator.Histogram < 0 {
+	} else if macd < signal && histogram < 0 {
 		score -= 1.0
 
 		reasons = append(reasons, "MACD bearish")
 	}
 
 	// Price vs Moving Average
-	if currentPrice > indicator.MA5 && currentPrice > indicator.MA25 {
+	if currentPrice > ma5 && currentPrice > ma25 {
 		score += 0.5
 
 		reasons = append(reasons, "Price above key MAs")
-	} else if currentPrice < indicator.MA5 && currentPrice < indicator.MA25 {
+	} else if currentPrice < ma5 && currentPrice < ma25 {
 		score -= 0.5
 
 		reasons = append(reasons, "Price below key MAs")

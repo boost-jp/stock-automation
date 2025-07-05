@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/database"
-	"github.com/boost-jp/stock-automation/app/models"
+	"github.com/boost-jp/stock-automation/app/domain/models"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/sirupsen/logrus"
 )
 
@@ -120,7 +121,7 @@ func (dc *DataCollector) updateSinglePrice(stockCode, stockName string) error {
 	logrus.WithFields(logrus.Fields{
 		"code":  stockCode,
 		"name":  stockName,
-		"price": price.Price,
+		"price": client.DecimalToFloat(price.ClosePrice),
 	}).Debug("Stock price updated")
 
 	return nil
@@ -184,15 +185,18 @@ func (dc *DataCollector) IsMarketOpen() bool {
 
 // データ品質チェック.
 func (dc *DataCollector) ValidateData(price *models.StockPrice) bool {
-	if price.Price <= 0 || price.Volume < 0 {
+	closePrice := client.DecimalToFloat(price.ClosePrice)
+	if closePrice <= 0 || price.Volume < 0 {
 		return false
 	}
 
-	if price.High < price.Low {
+	highPrice := client.DecimalToFloat(price.HighPrice)
+	lowPrice := client.DecimalToFloat(price.LowPrice)
+	if highPrice < lowPrice {
 		return false
 	}
 
-	if price.Price > price.High*1.1 || price.Price < price.Low*0.9 {
+	if closePrice > highPrice*1.1 || closePrice < lowPrice*0.9 {
 		return false
 	}
 
