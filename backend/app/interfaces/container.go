@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"github.com/boost-jp/stock-automation/app/domain"
+	"github.com/boost-jp/stock-automation/app/infrastructure/alert"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/config"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
@@ -20,6 +21,8 @@ type Container struct {
 	portfolioRepository repository.PortfolioRepository
 	stockDataClient     client.StockDataClient
 	notificationService notification.NotificationService
+	alertService        alert.Service
+	recoveryMiddleware  *alert.RecoveryMiddleware
 
 	// Domain Services
 	portfolioService         *domain.PortfolioService
@@ -103,6 +106,10 @@ func (c *Container) initializeInfrastructure() error {
 		c.config.Slack.Username,
 	)
 
+	// Alert service
+	c.alertService = alert.NewSlackAlertService()
+	c.recoveryMiddleware = alert.NewRecoveryMiddleware(c.alertService)
+
 	return nil
 }
 
@@ -119,6 +126,7 @@ func (c *Container) initializeUseCases() {
 		c.portfolioRepository,
 		c.stockDataClient,
 	)
+	c.collectDataUseCase.SetAlertService(c.alertService)
 
 	c.portfolioReportUseCase = usecase.NewPortfolioReportUseCase(
 		c.stockRepository,
@@ -139,6 +147,7 @@ func (c *Container) initializeInterfaces() {
 		c.collectDataUseCase,
 		c.portfolioReportUseCase,
 	)
+	c.scheduler.SetRecoveryMiddleware(c.recoveryMiddleware)
 }
 
 // GetConnectionManager returns the database connection manager
@@ -174,6 +183,16 @@ func (c *Container) GetTechnicalAnalysisUseCase() *usecase.TechnicalAnalysisUseC
 // GetScheduler returns the data scheduler
 func (c *Container) GetScheduler() *DataScheduler {
 	return c.scheduler
+}
+
+// GetAlertService returns the alert service
+func (c *Container) GetAlertService() alert.Service {
+	return c.alertService
+}
+
+// GetRecoveryMiddleware returns the recovery middleware
+func (c *Container) GetRecoveryMiddleware() *alert.RecoveryMiddleware {
+	return c.recoveryMiddleware
 }
 
 // Close cleans up all resources

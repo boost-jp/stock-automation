@@ -2,10 +2,12 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/domain/models"
+	"github.com/boost-jp/stock-automation/app/infrastructure/alert"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
 	"github.com/sirupsen/logrus"
@@ -16,6 +18,7 @@ type CollectDataUseCase struct {
 	stockRepo     repository.StockRepository
 	portfolioRepo repository.PortfolioRepository
 	stockClient   client.StockDataClient
+	alertService  alert.Service
 	maxWorkers    int
 }
 
@@ -31,6 +34,11 @@ func NewCollectDataUseCase(
 		stockClient:   stockClient,
 		maxWorkers:    5, // Limit concurrent API calls
 	}
+}
+
+// SetAlertService sets the alert service for error notifications
+func (uc *CollectDataUseCase) SetAlertService(alertService alert.Service) {
+	uc.alertService = alertService
 }
 
 // UpdateWatchList is kept for backward compatibility but now is a no-op.
@@ -112,6 +120,14 @@ func (uc *CollectDataUseCase) UpdatePricesForStocks(ctx context.Context, watchLi
 
 	if len(errors) > 0 {
 		logrus.Warnf("Encountered %d errors during price updates", len(errors))
+
+		// Send alert if too many errors
+		if uc.alertService != nil && len(errors) > len(stockCodes)/2 {
+			uc.alertService.SendError(ctx,
+				"High Error Rate in Price Updates",
+				fmt.Sprintf("Failed to update prices for %d out of %d stocks", len(errors), len(stockCodes)),
+				fmt.Errorf("multiple price update failures: %d errors", len(errors)))
+		}
 	}
 
 	return nil
@@ -121,15 +137,78 @@ func (uc *CollectDataUseCase) UpdatePricesForStocks(ctx context.Context, watchLi
 func (uc *CollectDataUseCase) UpdateStockPrice(ctx context.Context, stockCode string) error {
 	price, err := uc.stockClient.GetCurrentPrice(stockCode)
 	if err != nil {
+		// Check if this is a critical error (e.g., API down)
+		if uc.alertService != nil && isCriticalAPIError(err) {
+			uc.alertService.SendCritical(ctx,
+				"Stock API Critical Error",
+				fmt.Sprintf("Failed to fetch price for %s: API may be down", stockCode),
+				err)
+		}
 		return err
 	}
 
 	if err := uc.stockRepo.SaveStockPrice(ctx, price); err != nil {
+		// Database errors are critical
+		if uc.alertService != nil {
+			uc.alertService.SendCritical(ctx,
+				"Database Error",
+				fmt.Sprintf("Failed to save price for %s", stockCode),
+				err)
+		}
 		return err
 	}
 
 	logrus.Debugf("Price updated for %s: %.2f", stockCode, price.ClosePrice)
 	return nil
+}
+
+// isCriticalAPIError checks if an API error is critical
+func isCriticalAPIError(err error) bool {
+	// Check for specific critical error types
+	errorStr := err.Error()
+	criticalPatterns := []string{
+		"connection refused",
+		"timeout",
+		"rate limit",
+		"unauthorized",
+		"forbidden",
+	}
+
+	for _, pattern := range criticalPatterns {
+		if containsIgnoreCase(errorStr, pattern) {
+			return true
+		}
+	}
+	return false
+}
+
+// containsIgnoreCase checks if a string contains a substring (case-insensitive)
+func containsIgnoreCase(s, substr string) bool {
+	s = toLower(s)
+	substr = toLower(substr)
+	return len(s) >= len(substr) && contains(s, substr)
+}
+
+func toLower(s string) string {
+	result := make([]byte, len(s))
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if 'A' <= c && c <= 'Z' {
+			result[i] = c + 'a' - 'A'
+		} else {
+			result[i] = c
+		}
+	}
+	return string(result)
+}
+
+func contains(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
 
 // CollectHistoricalData collects historical data for technical analysis.

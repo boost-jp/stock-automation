@@ -24,6 +24,13 @@ func NewCLI(container *Container) *CLI {
 
 // Run starts the CLI application
 func (c *CLI) Run(args []string) error {
+	// Get recovery middleware if available
+	recoveryMiddleware := c.container.GetRecoveryMiddleware()
+	if recoveryMiddleware != nil {
+		// Defer panic recovery for the entire CLI run
+		defer recoveryMiddleware.Recover(context.Background(), "CLI")
+	}
+
 	if len(args) < 2 {
 		return c.runScheduler()
 	}
@@ -77,10 +84,32 @@ func (c *CLI) runScheduler() error {
 func (c *CLI) runDataCollection() error {
 	ctx := context.Background()
 	useCase := c.container.GetCollectDataUseCase()
+	recoveryMiddleware := c.container.GetRecoveryMiddleware()
 
 	logrus.Info("Running data collection...")
 
-	// Update all data
+	// Update all data with recovery wrapper
+	if recoveryMiddleware != nil {
+		return recoveryMiddleware.WrapOperation(ctx, "DataCollection", func() error {
+			// Update all data
+			if err := useCase.UpdateAllPrices(ctx); err != nil {
+				return fmt.Errorf("failed to update prices: %w", err)
+			}
+
+			if err := useCase.UpdateWatchList(ctx); err != nil {
+				return fmt.Errorf("failed to update watch list: %w", err)
+			}
+
+			if err := useCase.UpdatePortfolio(ctx); err != nil {
+				return fmt.Errorf("failed to update portfolio: %w", err)
+			}
+
+			logrus.Info("Data collection completed")
+			return nil
+		})
+	}
+
+	// Fallback without recovery middleware
 	if err := useCase.UpdateAllPrices(ctx); err != nil {
 		return fmt.Errorf("failed to update prices: %w", err)
 	}
@@ -101,9 +130,21 @@ func (c *CLI) runDataCollection() error {
 func (c *CLI) runDailyReport() error {
 	ctx := context.Background()
 	useCase := c.container.GetPortfolioReportUseCase()
+	recoveryMiddleware := c.container.GetRecoveryMiddleware()
 
 	logrus.Info("Generating daily report...")
 
+	if recoveryMiddleware != nil {
+		return recoveryMiddleware.WrapOperation(ctx, "DailyReport", func() error {
+			if err := useCase.GenerateAndSendDailyReport(ctx); err != nil {
+				return fmt.Errorf("failed to generate daily report: %w", err)
+			}
+			logrus.Info("Daily report sent successfully")
+			return nil
+		})
+	}
+
+	// Fallback without recovery middleware
 	if err := useCase.GenerateAndSendDailyReport(ctx); err != nil {
 		return fmt.Errorf("failed to generate daily report: %w", err)
 	}

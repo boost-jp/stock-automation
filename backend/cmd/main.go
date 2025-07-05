@@ -60,6 +60,14 @@ func main() {
 	}
 	defer container.Close()
 
+	// Alert service status
+	alertService := container.GetAlertService()
+	if alertService != nil {
+		logrus.Info("Alert service initialized successfully")
+	} else {
+		logrus.Warn("Alert service not available")
+	}
+
 	// CLIインターフェースの実行
 	cli := interfaces.NewCLI(container)
 	args := append([]string{os.Args[0]}, flag.Args()...)
