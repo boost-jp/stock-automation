@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var errPackagePath = "github.com/boost-jp/adcast-backend/app/errors"
+var errPackagePath = "github.com/boost-jp/stock-automation/app/errors"
 
 var (
 	customWrappedOnce  = errors.New("wrapped once")
