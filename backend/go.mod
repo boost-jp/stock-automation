@@ -1,6 +1,6 @@
 module github.com/boost-jp/stock-automation
 
-go 1.20
+go 1.24.4
 
 require (
 	github.com/aarondl/null/v8 v8.1.3
