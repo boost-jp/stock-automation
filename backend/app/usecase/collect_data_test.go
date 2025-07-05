@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +18,7 @@ type MockStockRepository struct {
 	stockPrices         map[string]*models.StockPrice
 	watchList           []*models.WatchList
 	technicalIndicators map[string]*models.TechnicalIndicator
+	mu                  sync.Mutex
 
 	// Error simulation
 	saveStockPriceErr     error
@@ -39,6 +41,8 @@ func (m *MockStockRepository) SaveStockPrice(ctx context.Context, price *models.
 	if m.saveStockPriceErr != nil {
 		return m.saveStockPriceErr
 	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.stockPrices[price.Code] = price
 	return nil
 }
@@ -47,6 +51,8 @@ func (m *MockStockRepository) GetLatestPrice(ctx context.Context, stockCode stri
 	if m.getLatestPriceErr != nil {
 		return nil, m.getLatestPriceErr
 	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	price, ok := m.stockPrices[stockCode]
 	if !ok {
 		// Return nil error but no price
@@ -400,7 +406,10 @@ func TestCollectDataUseCase_UpdateAllPrices(t *testing.T) {
 	// Verify all prices were updated
 	expectedCodes := []string{"7203", "6758", "9984"}
 	for _, code := range expectedCodes {
-		if _, ok := stockRepo.stockPrices[code]; !ok {
+		stockRepo.mu.Lock()
+		_, ok := stockRepo.stockPrices[code]
+		stockRepo.mu.Unlock()
+		if !ok {
 			t.Errorf("Stock price for %s was not saved", code)
 		}
 	}
