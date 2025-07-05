@@ -70,7 +70,10 @@
       "Bash(cp:*)",
       "Bash(sed:*)",
       "WebFetch(domain:github.com)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(unset GITHUB_TOKEN)",
+      "Bash(gh pr comments:*)",
+      "Bash(gh pr comment:*)"
     ],
     "deny": []
   }

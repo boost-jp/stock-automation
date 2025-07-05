@@ -11,9 +11,9 @@ import (
 	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
 	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
 	"github.com/boost-jp/stock-automation/app/testutil"
+	"github.com/boost-jp/stock-automation/app/testutil/fixture"
 	"github.com/boost-jp/stock-automation/app/usecase"
 	"github.com/google/go-cmp/cmp"
-	"github.com/oklog/ulid/v2"
 )
 
 // mockStockDataClient implements client.StockDataClient for testing (external API mock)
@@ -90,15 +90,23 @@ func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 			name: "successful report generation with profit",
 			setupFunc: func(t *testing.T) {
 				// Insert test portfolio
-				portfolioID := ulid.MustNew(ulid.Now(), nil).String()
-				err := testDB.InsertTestPortfolio(ctx, portfolioID, "7203", "トヨタ自動車", 100, 2000.0, time.Now())
-				if err != nil {
+				portfolio := fixture.NewPortfolio().
+					WithCode("7203").
+					WithName("トヨタ自動車").
+					WithShares(100).
+					WithPurchasePrice(2000.0).
+					WithPurchaseDate(time.Now())
+				if err := portfolio.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test portfolio: %v", err)
 				}
 
 				// Insert current stock price
-				err = testDB.InsertTestStockPrice(ctx, "7203", time.Now(), 2200.0, 2250.0, 2180.0, 2200.0, 1000000)
-				if err != nil {
+				stockPrice := fixture.NewStockPrice().
+					WithCode("7203").
+					WithDate(time.Now()).
+					WithPrices(2200.0, 2250.0, 2180.0, 2200.0).
+					WithVolume(1000000)
+				if err := stockPrice.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test stock price: %v", err)
 				}
 			},
@@ -112,15 +120,23 @@ func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 			name: "successful report generation with loss",
 			setupFunc: func(t *testing.T) {
 				// Insert test portfolio
-				portfolioID := ulid.MustNew(ulid.Now(), nil).String()
-				err := testDB.InsertTestPortfolio(ctx, portfolioID, "9983", "ファーストリテイリング", 50, 50000.0, time.Now())
-				if err != nil {
+				portfolio := fixture.NewPortfolio().
+					WithCode("9983").
+					WithName("ファーストリテイリング").
+					WithShares(50).
+					WithPurchasePrice(50000.0).
+					WithPurchaseDate(time.Now())
+				if err := portfolio.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test portfolio: %v", err)
 				}
 
 				// Insert current stock price
-				err = testDB.InsertTestStockPrice(ctx, "9983", time.Now(), 48000.0, 48500.0, 47500.0, 48000.0, 500000)
-				if err != nil {
+				stockPrice := fixture.NewStockPrice().
+					WithCode("9983").
+					WithDate(time.Now()).
+					WithPrices(48000.0, 48500.0, 47500.0, 48000.0).
+					WithVolume(500000)
+				if err := stockPrice.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test stock price: %v", err)
 				}
 			},
@@ -140,9 +156,13 @@ func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 			name: "portfolio with missing price data",
 			setupFunc: func(t *testing.T) {
 				// Insert test portfolio without corresponding price data
-				portfolioID := ulid.MustNew(ulid.Now(), nil).String()
-				err := testDB.InsertTestPortfolio(ctx, portfolioID, "1111", "Missing Stock", 100, 1000.0, time.Now())
-				if err != nil {
+				portfolio := fixture.NewPortfolio().
+					WithCode("1111").
+					WithName("Missing Stock").
+					WithShares(100).
+					WithPurchasePrice(1000.0).
+					WithPurchaseDate(time.Now())
+				if err := portfolio.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test portfolio: %v", err)
 				}
 			},
@@ -222,26 +242,42 @@ func TestPortfolioReportUseCase_GenerateComprehensiveDailyReport(t *testing.T) {
 			name: "comprehensive report with mixed performance",
 			setupFunc: func(t *testing.T) {
 				// Insert multiple portfolios
-				portfolioID1 := ulid.MustNew(ulid.Now(), nil).String()
-				err := testDB.InsertTestPortfolio(ctx, portfolioID1, "7203", "トヨタ自動車", 100, 2000.0, time.Now())
-				if err != nil {
+				portfolio1 := fixture.NewPortfolio().
+					WithCode("7203").
+					WithName("トヨタ自動車").
+					WithShares(100).
+					WithPurchasePrice(2000.0).
+					WithPurchaseDate(time.Now())
+				if err := portfolio1.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test portfolio 1: %v", err)
 				}
 
-				portfolioID2 := ulid.MustNew(ulid.Now(), nil).String()
-				err = testDB.InsertTestPortfolio(ctx, portfolioID2, "9983", "ファーストリテイリング", 50, 50000.0, time.Now())
-				if err != nil {
+				portfolio2 := fixture.NewPortfolio().
+					WithCode("9983").
+					WithName("ファーストリテイリング").
+					WithShares(50).
+					WithPurchasePrice(50000.0).
+					WithPurchaseDate(time.Now())
+				if err := portfolio2.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test portfolio 2: %v", err)
 				}
 
 				// Insert stock prices
-				err = testDB.InsertTestStockPrice(ctx, "7203", time.Now(), 2200.0, 2250.0, 2180.0, 2200.0, 1000000)
-				if err != nil {
+				stockPrice1 := fixture.NewStockPrice().
+					WithCode("7203").
+					WithDate(time.Now()).
+					WithPrices(2200.0, 2250.0, 2180.0, 2200.0).
+					WithVolume(1000000)
+				if err := stockPrice1.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert stock price 1: %v", err)
 				}
 
-				err = testDB.InsertTestStockPrice(ctx, "9983", time.Now(), 48000.0, 48500.0, 47500.0, 48000.0, 500000)
-				if err != nil {
+				stockPrice2 := fixture.NewStockPrice().
+					WithCode("9983").
+					WithDate(time.Now()).
+					WithPrices(48000.0, 48500.0, 47500.0, 48000.0).
+					WithVolume(500000)
+				if err := stockPrice2.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert stock price 2: %v", err)
 				}
 			},
@@ -267,9 +303,13 @@ func TestPortfolioReportUseCase_GenerateComprehensiveDailyReport(t *testing.T) {
 			name: "report with price errors",
 			setupFunc: func(t *testing.T) {
 				// Insert portfolio without price data
-				portfolioID := ulid.MustNew(ulid.Now(), nil).String()
-				err := testDB.InsertTestPortfolio(ctx, portfolioID, "1111", "エラー銘柄", 100, 1000.0, time.Now())
-				if err != nil {
+				portfolio := fixture.NewPortfolio().
+					WithCode("1111").
+					WithName("エラー銘柄").
+					WithShares(100).
+					WithPurchasePrice(1000.0).
+					WithPurchaseDate(time.Now())
+				if err := portfolio.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test portfolio: %v", err)
 				}
 			},
@@ -338,15 +378,23 @@ func TestPortfolioReportUseCase_GetPortfolioStatistics(t *testing.T) {
 			name: "statistics with valid data",
 			setupFunc: func(t *testing.T) {
 				// Insert test portfolio
-				portfolioID := ulid.MustNew(ulid.Now(), nil).String()
-				err := testDB.InsertTestPortfolio(ctx, portfolioID, "7203", "トヨタ自動車", 100, 2000.0, time.Now())
-				if err != nil {
+				portfolio := fixture.NewPortfolio().
+					WithCode("7203").
+					WithName("トヨタ自動車").
+					WithShares(100).
+					WithPurchasePrice(2000.0).
+					WithPurchaseDate(time.Now())
+				if err := portfolio.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test portfolio: %v", err)
 				}
 
 				// Insert current stock price
-				err = testDB.InsertTestStockPrice(ctx, "7203", time.Now(), 2200.0, 2250.0, 2180.0, 2200.0, 1000000)
-				if err != nil {
+				stockPrice := fixture.NewStockPrice().
+					WithCode("7203").
+					WithDate(time.Now()).
+					WithPrices(2200.0, 2250.0, 2180.0, 2200.0).
+					WithVolume(1000000)
+				if err := stockPrice.Insert(ctx, testDB.GetBoilDB()); err != nil {
 					t.Fatalf("Failed to insert test stock price: %v", err)
 				}
 			},

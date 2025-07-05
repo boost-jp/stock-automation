@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/boost-jp/stock-automation/app/infrastructure/dao"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -113,10 +114,10 @@ func (tdb *TestDB) Cleanup() error {
 // TruncateAll truncates all tables in the test database
 func (tdb *TestDB) TruncateAll() error {
 	tables := []string{
-		"portfolios",
-		"stock_prices",
-		"technical_indicators",
-		"watch_lists",
+		dao.TableNames.Portfolios,
+		dao.TableNames.StockPrices,
+		dao.TableNames.TechnicalIndicators,
+		dao.TableNames.WatchLists,
 	}
 
 	// Disable foreign key checks
@@ -168,17 +169,38 @@ func (tdb *TestDB) WithTransaction(ctx context.Context, fn func(tx *sql.Tx) erro
 
 // createTestSchema creates the database schema for testing
 func createTestSchema(db *sql.DB) error {
+	// Read the schema from the main schema.sql file
+	schemaPath := "../schema.sql"
+	schemaBytes, err := os.ReadFile(schemaPath)
+	if err != nil {
+		// If schema.sql is not found, use the embedded schema
+		return createEmbeddedTestSchema(db)
+	}
+
+	// Execute schema creation
+	if _, err := db.Exec(string(schemaBytes)); err != nil {
+		return fmt.Errorf("failed to create schema from file: %w", err)
+	}
+
+	return nil
+}
+
+// createEmbeddedTestSchema creates the database schema using embedded SQL
+func createEmbeddedTestSchema(db *sql.DB) error {
 	schema := `
 CREATE TABLE IF NOT EXISTS watch_lists (
     id VARCHAR(26) PRIMARY KEY,
     code VARCHAR(10) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    target_buy_price DECIMAL(10,2),
+    target_sell_price DECIMAL(10,2),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS stock_prices (
+    id VARCHAR(26) PRIMARY KEY,
     code VARCHAR(10) NOT NULL,
     date DATE NOT NULL,
     open_price DECIMAL(10,2) NOT NULL,
@@ -187,19 +209,27 @@ CREATE TABLE IF NOT EXISTS stock_prices (
     close_price DECIMAL(10,2) NOT NULL,
     volume BIGINT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (code, date),
-    INDEX idx_date (date),
-    INDEX idx_code_date (code, date)
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_code_date (code, date),
+    INDEX idx_code (code),
+    INDEX idx_date (date)
 );
 
 CREATE TABLE IF NOT EXISTS technical_indicators (
+    id VARCHAR(26) PRIMARY KEY,
     code VARCHAR(10) NOT NULL,
     date DATE NOT NULL,
-    indicator_type VARCHAR(50) NOT NULL,
-    value DECIMAL(20,6) NOT NULL,
+    rsi_14 DECIMAL(5,2),
+    macd DECIMAL(10,4),
+    macd_signal DECIMAL(10,4),
+    macd_histogram DECIMAL(10,4),
+    sma_5 DECIMAL(10,2),
+    sma_25 DECIMAL(10,2),
+    sma_75 DECIMAL(10,2),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (code, date, indicator_type),
-    INDEX idx_code_type (code, indicator_type),
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_code_date (code, date),
+    INDEX idx_code (code),
     INDEX idx_date (date)
 );
 
@@ -218,7 +248,7 @@ CREATE TABLE IF NOT EXISTS portfolios (
 
 	// Execute schema creation
 	if _, err := db.Exec(schema); err != nil {
-		return fmt.Errorf("failed to create schema: %w", err)
+		return fmt.Errorf("failed to create embedded schema: %w", err)
 	}
 
 	return nil
@@ -232,31 +262,5 @@ func getEnvOrDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
-// Helper functions for test data creation
-
-// InsertTestPortfolio inserts a test portfolio record
-func (tdb *TestDB) InsertTestPortfolio(ctx context.Context, id, code, name string, shares int, purchasePrice float64, purchaseDate time.Time) error {
-	query := `
-		INSERT INTO portfolios (id, code, name, shares, purchase_price, purchase_date)
-		VALUES (?, ?, ?, ?, ?, ?)
-	`
-	return tdb.ExecSQL(query, id, code, name, shares, purchasePrice, purchaseDate)
-}
-
-// InsertTestStockPrice inserts a test stock price record
-func (tdb *TestDB) InsertTestStockPrice(ctx context.Context, code string, date time.Time, open, high, low, close float64, volume int64) error {
-	query := `
-		INSERT INTO stock_prices (code, date, open_price, high_price, low_price, close_price, volume)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`
-	return tdb.ExecSQL(query, code, date, open, high, low, close, volume)
-}
-
-// InsertTestWatchList inserts a test watch list record
-func (tdb *TestDB) InsertTestWatchList(ctx context.Context, id, code, name string, isActive bool) error {
-	query := `
-		INSERT INTO watch_lists (id, code, name, is_active)
-		VALUES (?, ?, ?, ?)
-	`
-	return tdb.ExecSQL(query, id, code, name, isActive)
-}
+// Helper functions for test data creation are now provided by the fixture package
+// See app/testutil/fixture for test data builders

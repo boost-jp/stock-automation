@@ -63,6 +63,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
     
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: stock_automation_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -83,9 +97,26 @@ jobs:
     - name: Install dependencies
       working-directory: ./backend
       run: go mod download
+
+      
+    - name: Setup test database
+      working-directory: ./backend
+      env:
+        DB_HOST: localhost
+        DB_PORT: 3306
+        DB_USER: root
+        DB_PASS: password
+        TEST_DB_NAME: stock_automation_test
+      run: |
+        mysql -h$DB_HOST -P$DB_PORT -u$DB_USER -p$DB_PASS -e "CREATE DATABASE IF NOT EXISTS $TEST_DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        go tool mysqldef -h$DB_HOST -P$DB_PORT -u$DB_USER -p$DB_PASS $TEST_DB_NAME < schema.sql
       
     - name: Run unit tests
       working-directory: ./backend
+      env:
+        TEST_DB_HOST: localhost
+        TEST_DB_USER: root
+        TEST_DB_PASSWORD: password
       run: go test -v -race -coverprofile=coverage.out ./...
       
     - name: Generate coverage report
