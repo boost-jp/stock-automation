@@ -55,5 +55,3 @@ func (a *Alert) WithContext(key string, value interface{}) *Alert {
 	a.Context[key] = value
 	return a
 }
-
-

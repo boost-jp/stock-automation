@@ -16,4 +16,3 @@ type Service interface {
 	// SendWarning sends a warning alert
 	SendWarning(ctx context.Context, title, message string, err error) error
 }
-

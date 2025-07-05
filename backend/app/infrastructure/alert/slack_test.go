@@ -163,4 +163,3 @@ func TestSlackAlertService_NoWebhookURL(t *testing.T) {
 		t.Errorf("Should not return error when webhook URL is not set: %v", err)
 	}
 }
-

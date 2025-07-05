@@ -287,4 +287,3 @@ func (s *SlackAlertService) logAlert(alert *Alert) {
 		entry.Info("Alert")
 	}
 }
-

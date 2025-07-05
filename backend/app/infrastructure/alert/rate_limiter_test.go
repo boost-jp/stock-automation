@@ -98,4 +98,3 @@ func TestRateLimiter_ConcurrentAccess(t *testing.T) {
 		t.Errorf("Expected 100 requests to be allowed, got %d", count)
 	}
 }
-

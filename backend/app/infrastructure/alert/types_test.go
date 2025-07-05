@@ -92,4 +92,3 @@ func TestAlert_WithContext(t *testing.T) {
 		t.Errorf("Context mismatch (-want +got):\n%s", diff)
 	}
 }
-

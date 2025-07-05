@@ -211,4 +211,3 @@ func TestIsCriticalError(t *testing.T) {
 		})
 	}
 }
-

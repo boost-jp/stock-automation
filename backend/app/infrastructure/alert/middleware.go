@@ -123,4 +123,3 @@ func toLower(b byte) byte {
 	}
 	return b
 }
-
