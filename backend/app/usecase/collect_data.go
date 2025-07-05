@@ -13,12 +13,12 @@ import (
 
 // CollectDataUseCase handles data collection business logic.
 type CollectDataUseCase struct {
-	stockRepo    repository.StockRepository
+	stockRepo     repository.StockRepository
 	portfolioRepo repository.PortfolioRepository
-	stockClient  client.StockDataClient
-	mu           sync.RWMutex
-	watchList    []*models.WatchList
-	portfolio    []*models.Portfolio
+	stockClient   client.StockDataClient
+	mu            sync.RWMutex
+	watchList     []*models.WatchList
+	portfolio     []*models.Portfolio
 }
 
 // NewCollectDataUseCase creates a new data collection use case.

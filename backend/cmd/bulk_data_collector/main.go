@@ -14,10 +14,10 @@ import (
 
 // BulkDataCollector handles bulk historical data collection for technical analysis.
 type BulkDataCollector struct {
-	stockRepo    repository.StockRepository
-	yahooClient  client.StockDataClient
-	maxRetries   int
-	maxWorkers   int
+	stockRepo   repository.StockRepository
+	yahooClient client.StockDataClient
+	maxRetries  int
+	maxWorkers  int
 }
 
 // NewBulkDataCollector creates a new bulk data collector.
@@ -201,7 +201,6 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStock(ctx context.Context,
 
 	return nil
 }
-
 
 // GetStockCodesForAnalysis returns the list of stock codes to analyze.
 func (bdc *BulkDataCollector) GetStockCodesForAnalysis() []string {

@@ -33,7 +33,6 @@ func (dc *DataCollector) UpdateAllPrices() error {
 	return dc.useCase.UpdateAllPrices(context.Background())
 }
 
-
 // CollectHistoricalData collects historical data.
 func (dc *DataCollector) CollectHistoricalData(stockCode string, days int) error {
 	return dc.useCase.CollectHistoricalData(context.Background(), stockCode, days)
@@ -43,4 +42,3 @@ func (dc *DataCollector) CollectHistoricalData(stockCode string, days int) error
 func (dc *DataCollector) IsMarketOpen() bool {
 	return dc.useCase.IsMarketOpen()
 }
-
