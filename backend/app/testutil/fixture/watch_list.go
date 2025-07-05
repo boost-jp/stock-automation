@@ -73,4 +73,3 @@ func (b *WatchListBuilder) Build() *dao.WatchList {
 func (b *WatchListBuilder) Insert(ctx context.Context, db boil.ContextExecutor) error {
 	return b.watchList.Insert(ctx, db, boil.Infer())
 }
-

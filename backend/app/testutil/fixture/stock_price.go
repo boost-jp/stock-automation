@@ -72,4 +72,3 @@ func (b *StockPriceBuilder) Build() *dao.StockPrice {
 func (b *StockPriceBuilder) Insert(ctx context.Context, db boil.ContextExecutor) error {
 	return b.stockPrice.Insert(ctx, db, boil.Infer())
 }
-

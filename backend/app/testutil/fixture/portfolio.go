@@ -73,4 +73,3 @@ func (b *PortfolioBuilder) Build() *dao.Portfolio {
 func (b *PortfolioBuilder) Insert(ctx context.Context, db boil.ContextExecutor) error {
 	return b.portfolio.Insert(ctx, db, boil.Infer())
 }
-
