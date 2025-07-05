@@ -10,8 +10,8 @@ import (
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
 	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
-	"github.com/boost-jp/stock-automation/app/usecase"
 	"github.com/boost-jp/stock-automation/app/testutil"
+	"github.com/boost-jp/stock-automation/app/usecase"
 	"github.com/google/go-cmp/cmp"
 	"github.com/oklog/ulid/v2"
 )
@@ -209,10 +209,10 @@ func TestPortfolioReportUseCase_GenerateComprehensiveDailyReport(t *testing.T) {
 	portfolioRepo := repository.NewPortfolioRepository(testDB.GetBoilDB())
 
 	tests := []struct {
-		name              string
-		setupFunc         func(t *testing.T)
-		expectedContains  []string
-		wantErr           bool
+		name             string
+		setupFunc        func(t *testing.T)
+		expectedContains []string
+		wantErr          bool
 	}{
 		{
 			name: "comprehensive report with mixed performance",
@@ -422,3 +422,4 @@ func contains(s, substr string) bool {
 	}
 	return false
 }
+

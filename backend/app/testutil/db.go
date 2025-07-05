@@ -15,10 +15,10 @@ import (
 
 // TestDB represents a test database connection
 type TestDB struct {
-	DB              *sql.DB
-	ConnectionMgr   database.ConnectionManager
-	cleanupFuncs    []func() error
-	testSchemaName  string
+	DB             *sql.DB
+	ConnectionMgr  database.ConnectionManager
+	cleanupFuncs   []func() error
+	testSchemaName string
 }
 
 // NewTestDB creates a new test database connection
@@ -40,7 +40,7 @@ func NewTestDB(t *testing.T) *TestDB {
 	// Create connection to MySQL without specifying database
 	rootDSN := fmt.Sprintf("%s:%s@tcp(%s:%d)/",
 		config.User, config.Password, config.Host, config.Port)
-	
+
 	rootDB, err := sql.Open("mysql", rootDSN)
 	if err != nil {
 		t.Fatalf("Failed to connect to MySQL: %v", err)
@@ -255,3 +255,4 @@ func (tdb *TestDB) InsertTestWatchList(ctx context.Context, id, code, name strin
 	`
 	return tdb.ExecSQL(query, id, code, name, isActive)
 }
+
