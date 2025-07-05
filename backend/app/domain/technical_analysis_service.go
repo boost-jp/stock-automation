@@ -264,7 +264,7 @@ func (s *TechnicalAnalysisService) ConvertToModelIndicator(data *TechnicalIndica
 }
 
 // decimalToFloat converts types.Decimal to float64
-func (s *TechnicalAnalysisService) decimalToFloat(d interface{}) float64 {
+func (s *TechnicalAnalysisService) decimalToFloat(d any) float64 {
 	// This is a simplified conversion
 	// In a real implementation, you would use the actual decimal library methods
 	str := fmt.Sprintf("%v", d)

@@ -220,7 +220,7 @@ func (s *PortfolioService) CalculateHoldingReturn(portfolio *models.Portfolio, c
 }
 
 // decimalToFloat converts types.Decimal to float64
-func (s *PortfolioService) decimalToFloat(d interface{}) float64 {
+func (s *PortfolioService) decimalToFloat(d any) float64 {
 	// This is a simplified conversion
 	// In a real implementation, you would use the actual decimal library methods
 	// For now, we'll assume it can be converted to string and then parsed
