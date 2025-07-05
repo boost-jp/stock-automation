@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/aarondl/sqlboiler/v4/types"
+	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/google/go-cmp/cmp"
 )
 

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/aarondl/sqlboiler/v4/types"
+	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -186,7 +186,7 @@ func TestTechnicalAnalysisService_RSI(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := service.RSI(tt.prices, tt.period)
-			
+
 			// Use approximate comparison for RSI since it's a complex calculation
 			tolerance := 5.0
 			if abs(result-tt.expected) > tolerance {
