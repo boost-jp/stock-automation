@@ -19,6 +19,7 @@ func (db *DB) SaveStockPrices(prices []models.StockPrice) error {
 // 最新株価取得.
 func (db *DB) GetLatestPrice(stockCode string) (*models.StockPrice, error) {
 	var price models.StockPrice
+
 	err := db.conn.Where("code = ?", stockCode).
 		Order("timestamp desc").
 		First(&price).Error
@@ -74,6 +75,7 @@ func (db *DB) SaveTechnicalIndicator(indicator *models.TechnicalIndicator) error
 // 最新テクニカル指標取得.
 func (db *DB) GetLatestTechnicalIndicator(stockCode string) (*models.TechnicalIndicator, error) {
 	var indicator models.TechnicalIndicator
+
 	err := db.conn.Where("code = ?", stockCode).
 		Order("timestamp desc").
 		First(&indicator).Error
