@@ -9,18 +9,18 @@ import (
 
 func TestYahooFinanceClient_Interface(t *testing.T) {
 	client := NewYahooFinanceClient()
-	
+
 	// Verify interface compliance
 	var _ StockDataClient = client
-	
+
 	if client == nil {
 		t.Error("Yahoo Finance client should not be nil")
 	}
-	
+
 	if client.baseURL == "" {
 		t.Error("Base URL should be set")
 	}
-	
+
 	if client.client == nil {
 		t.Error("HTTP client should be initialized")
 	}
@@ -28,7 +28,7 @@ func TestYahooFinanceClient_Interface(t *testing.T) {
 
 func TestYahooFinanceClient_GetCurrentPrice_InvalidCode(t *testing.T) {
 	client := NewYahooFinanceClient()
-	
+
 	// Test with invalid stock code
 	_, err := client.GetCurrentPrice("INVALID_CODE_12345")
 	if err == nil {
@@ -38,7 +38,7 @@ func TestYahooFinanceClient_GetCurrentPrice_InvalidCode(t *testing.T) {
 
 func TestYahooFinanceClient_GetHistoricalData_InvalidParams(t *testing.T) {
 	client := NewYahooFinanceClient()
-	
+
 	tests := []struct {
 		name      string
 		stockCode string
@@ -64,15 +64,15 @@ func TestYahooFinanceClient_GetHistoricalData_InvalidParams(t *testing.T) {
 			wantError: false, // Should handle gracefully
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := client.GetHistoricalData(tt.stockCode, tt.days)
-			
+
 			if tt.wantError && err == nil {
 				t.Error("Expected error but got none")
 			}
-			
+
 			// Note: We can't test successful cases without real API calls
 			// In integration tests, you would test with real stock codes
 		})
@@ -81,7 +81,7 @@ func TestYahooFinanceClient_GetHistoricalData_InvalidParams(t *testing.T) {
 
 func TestYahooFinanceClient_GetIntradayData_InvalidParams(t *testing.T) {
 	client := NewYahooFinanceClient()
-	
+
 	tests := []struct {
 		name      string
 		stockCode string
@@ -101,11 +101,11 @@ func TestYahooFinanceClient_GetIntradayData_InvalidParams(t *testing.T) {
 			wantError: true, // Will fail without real API access
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := client.GetIntradayData(tt.stockCode, tt.interval)
-			
+
 			if tt.wantError && err == nil {
 				t.Error("Expected error but got none")
 			}
@@ -115,10 +115,10 @@ func TestYahooFinanceClient_GetIntradayData_InvalidParams(t *testing.T) {
 
 // MockStockDataClient implements StockDataClient for testing.
 type MockStockDataClient struct {
-	mockCurrentPrice    *models.StockPrice
-	mockHistoricalData  []*models.StockPrice
-	mockIntradayData    []*models.StockPrice
-	shouldReturnError   bool
+	mockCurrentPrice   *models.StockPrice
+	mockHistoricalData []*models.StockPrice
+	mockIntradayData   []*models.StockPrice
+	shouldReturnError  bool
 }
 
 func NewMockStockDataClient() *MockStockDataClient {
@@ -189,10 +189,10 @@ func (e *mockError) Error() string {
 
 func TestMockStockDataClient(t *testing.T) {
 	client := NewMockStockDataClient()
-	
+
 	// Test interface compliance
 	var _ StockDataClient = client
-	
+
 	t.Run("GetCurrentPrice", func(t *testing.T) {
 		price, err := client.GetCurrentPrice("1234")
 		if err != nil {
@@ -205,7 +205,7 @@ func TestMockStockDataClient(t *testing.T) {
 			t.Errorf("Expected code 1234, got %s", price.Code)
 		}
 	})
-	
+
 	t.Run("GetHistoricalData", func(t *testing.T) {
 		prices, err := client.GetHistoricalData("1234", 30)
 		if err != nil {
@@ -215,7 +215,7 @@ func TestMockStockDataClient(t *testing.T) {
 			t.Error("Should return at least one price")
 		}
 	})
-	
+
 	t.Run("GetIntradayData", func(t *testing.T) {
 		prices, err := client.GetIntradayData("1234", "1m")
 		if err != nil {
@@ -225,20 +225,20 @@ func TestMockStockDataClient(t *testing.T) {
 			t.Error("Should return at least one price")
 		}
 	})
-	
+
 	t.Run("Error handling", func(t *testing.T) {
 		client.shouldReturnError = true
-		
+
 		_, err := client.GetCurrentPrice("1234")
 		if err == nil {
 			t.Error("Expected error but got none")
 		}
-		
+
 		_, err = client.GetHistoricalData("1234", 30)
 		if err == nil {
 			t.Error("Expected error but got none")
 		}
-		
+
 		_, err = client.GetIntradayData("1234", "1m")
 		if err == nil {
 			t.Error("Expected error but got none")

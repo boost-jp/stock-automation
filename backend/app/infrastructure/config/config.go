@@ -30,13 +30,13 @@ type DatabaseConfig struct {
 
 // YahooConfig holds Yahoo Finance API configuration.
 type YahooConfig struct {
-	BaseURL        string        `json:"base_url"`
-	Timeout        time.Duration `json:"timeout"`
-	RetryCount     int           `json:"retry_count"`
-	RetryWaitTime  time.Duration `json:"retry_wait_time"`
-	RetryMaxWait   time.Duration `json:"retry_max_wait"`
-	RateLimitRPS   int           `json:"rate_limit_rps"`
-	UserAgent      string        `json:"user_agent"`
+	BaseURL       string        `json:"base_url"`
+	Timeout       time.Duration `json:"timeout"`
+	RetryCount    int           `json:"retry_count"`
+	RetryWaitTime time.Duration `json:"retry_wait_time"`
+	RetryMaxWait  time.Duration `json:"retry_max_wait"`
+	RateLimitRPS  int           `json:"rate_limit_rps"`
+	UserAgent     string        `json:"user_agent"`
 }
 
 // ServerConfig holds server configuration.
@@ -67,13 +67,13 @@ func LoadConfig() *Config {
 			MaxLifetime:  getEnvAsDuration("DB_MAX_LIFETIME", 5*time.Minute),
 		},
 		Yahoo: YahooConfig{
-			BaseURL:        getEnv("YAHOO_BASE_URL", "https://query1.finance.yahoo.com"),
-			Timeout:        getEnvAsDuration("YAHOO_TIMEOUT", 30*time.Second),
-			RetryCount:     getEnvAsInt("YAHOO_RETRY_COUNT", 3),
-			RetryWaitTime:  getEnvAsDuration("YAHOO_RETRY_WAIT", 1*time.Second),
-			RetryMaxWait:   getEnvAsDuration("YAHOO_RETRY_MAX_WAIT", 10*time.Second),
-			RateLimitRPS:   getEnvAsInt("YAHOO_RATE_LIMIT_RPS", 10),
-			UserAgent:      getEnv("YAHOO_USER_AGENT", "Mozilla/5.0 (compatible; StockAutomation/1.0)"),
+			BaseURL:       getEnv("YAHOO_BASE_URL", "https://query1.finance.yahoo.com"),
+			Timeout:       getEnvAsDuration("YAHOO_TIMEOUT", 30*time.Second),
+			RetryCount:    getEnvAsInt("YAHOO_RETRY_COUNT", 3),
+			RetryWaitTime: getEnvAsDuration("YAHOO_RETRY_WAIT", 1*time.Second),
+			RetryMaxWait:  getEnvAsDuration("YAHOO_RETRY_MAX_WAIT", 10*time.Second),
+			RateLimitRPS:  getEnvAsInt("YAHOO_RATE_LIMIT_RPS", 10),
+			UserAgent:     getEnv("YAHOO_USER_AGENT", "Mozilla/5.0 (compatible; StockAutomation/1.0)"),
 		},
 		Server: ServerConfig{
 			Port:         getEnvAsInt("SERVER_PORT", 8080),
