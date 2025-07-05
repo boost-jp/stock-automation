@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aarondl/null/v8"
+	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/boost-jp/stock-automation/app/analysis"
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/google/go-cmp/cmp"
 	"github.com/shopspring/decimal"
-	"github.com/aarondl/null/v8"
-	"github.com/aarondl/sqlboiler/v4/types"
 )
 
 // Mock implementations for testing
@@ -93,7 +93,7 @@ func (m *mockStockDataClient) GetHistoricalData(code string, startDate, endDate 
 }
 
 type mockNotificationService struct {
-	sendMessageFunc      func(message string) error
+	sendMessageFunc     func(message string) error
 	sendDailyReportFunc func(totalValue, totalGain, gainPercent float64) error
 }
 
@@ -113,14 +113,14 @@ func (m *mockNotificationService) SendDailyReport(totalValue, totalGain, gainPer
 
 func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 	tests := []struct {
-		name                  string
-		portfolio            []*models.Portfolio
-		stockPrices          map[string]*models.StockPrice
-		expectNotification   bool
-		expectedTotalValue   float64
-		expectedTotalGain    float64
-		expectedGainPercent  float64
-		wantErr              bool
+		name                string
+		portfolio           []*models.Portfolio
+		stockPrices         map[string]*models.StockPrice
+		expectNotification  bool
+		expectedTotalValue  float64
+		expectedTotalGain   float64
+		expectedGainPercent float64
+		wantErr             bool
 	}{
 		{
 			name: "successful report generation with profit",
@@ -188,12 +188,12 @@ func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 					PurchaseDate:  time.Now(),
 				},
 			},
-			stockPrices:        map[string]*models.StockPrice{},
-			expectNotification: true,
-			expectedTotalValue: 0.0,
-			expectedTotalGain:  0.0,
+			stockPrices:         map[string]*models.StockPrice{},
+			expectNotification:  true,
+			expectedTotalValue:  0.0,
+			expectedTotalGain:   0.0,
 			expectedGainPercent: 0.0,
-			wantErr:            false,
+			wantErr:             false,
 		},
 	}
 
@@ -257,7 +257,7 @@ func TestPortfolioReportUseCase_GenerateAndSendDailyReport(t *testing.T) {
 
 func TestPortfolioReportUseCase_GenerateComprehensiveDailyReport(t *testing.T) {
 	tests := []struct {
-		name              string
+		name             string
 		portfolio        []*models.Portfolio
 		stockPrices      map[string]*models.StockPrice
 		expectedContains []string
@@ -370,7 +370,7 @@ func TestPortfolioReportUseCase_GenerateComprehensiveDailyReport(t *testing.T) {
 
 func TestPortfolioReportUseCase_GetPortfolioStatistics(t *testing.T) {
 	tests := []struct {
-		name             string
+		name            string
 		portfolio       []*models.Portfolio
 		stockPrices     map[string]*models.StockPrice
 		expectedSummary *analysis.PortfolioSummary
