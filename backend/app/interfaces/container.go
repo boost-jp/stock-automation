@@ -107,7 +107,7 @@ func (c *Container) initializeInfrastructure() error {
 	)
 
 	// Alert service
-	c.alertService = alert.NewSlackAlertService()
+	c.alertService = alert.NewSlackAlertService(c.config.Slack.WebhookURL)
 	c.recoveryMiddleware = alert.NewRecoveryMiddleware(c.alertService)
 
 	return nil

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 )
@@ -33,13 +32,8 @@ func TestSlackAlertService_Send(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Set webhook URL to test server
-	os.Setenv("SLACK_WEBHOOK_URL", server.URL)
-	defer os.Unsetenv("SLACK_WEBHOOK_URL")
-
-	// Create service
-	service := NewSlackAlertService()
-	service.webhookURL = server.URL
+	// Create service with test server URL
+	service := NewSlackAlertService(server.URL)
 
 	// Test sending different alert levels
 	tests := []struct {
@@ -102,8 +96,7 @@ func TestSlackAlertService_RateLimiting(t *testing.T) {
 	}))
 	defer server.Close()
 
-	service := NewSlackAlertService()
-	service.webhookURL = server.URL
+	service := NewSlackAlertService(server.URL)
 	service.rateLimiter = NewRateLimiter(2, 100*time.Millisecond)
 	service.alertInterval = 0 // Disable frequency limiting for this test
 
@@ -128,8 +121,7 @@ func TestSlackAlertService_FrequencyLimit(t *testing.T) {
 	}))
 	defer server.Close()
 
-	service := NewSlackAlertService()
-	service.webhookURL = server.URL
+	service := NewSlackAlertService(server.URL)
 	service.alertInterval = 100 * time.Millisecond
 
 	ctx := context.Background()
@@ -155,8 +147,7 @@ func TestSlackAlertService_FrequencyLimit(t *testing.T) {
 }
 
 func TestSlackAlertService_NoWebhookURL(t *testing.T) {
-	service := NewSlackAlertService()
-	service.webhookURL = ""
+	service := NewSlackAlertService("")
 
 	// Should not return error when webhook URL is not set
 	if err := service.SendCritical(context.Background(), "Test", "Message", nil); err != nil {

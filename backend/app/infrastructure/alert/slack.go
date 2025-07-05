@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -48,10 +47,9 @@ type SlackField struct {
 }
 
 // NewSlackAlertService creates a new Slack alert service
-func NewSlackAlertService() *SlackAlertService {
-	webhookURL := os.Getenv("SLACK_WEBHOOK_URL")
+func NewSlackAlertService(webhookURL string) *SlackAlertService {
 	if webhookURL == "" {
-		logrus.Warn("SLACK_WEBHOOK_URL not set for alert service")
+		logrus.Warn("Slack webhook URL not provided for alert service")
 	}
 
 	return &SlackAlertService{
