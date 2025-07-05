@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -29,7 +30,7 @@ func NewTestDB(t *testing.T) *TestDB {
 	// Use test-specific database configuration
 	config := database.DatabaseConfig{
 		Host:         getEnvOrDefault("TEST_DB_HOST", "localhost"),
-		Port:         3306,
+		Port:         getEnvOrDefaultInt("TEST_DB_PORT", 3306),
 		User:         getEnvOrDefault("TEST_DB_USER", "root"),
 		Password:     getEnvOrDefault("TEST_DB_PASSWORD", "password"),
 		DatabaseName: fmt.Sprintf("test_stock_automation_%d", time.Now().Unix()),
@@ -170,7 +171,7 @@ func (tdb *TestDB) WithTransaction(ctx context.Context, fn func(tx *sql.Tx) erro
 // createTestSchema creates the database schema for testing
 func createTestSchema(db *sql.DB) error {
 	// Read the schema from the main schema.sql file
-	schemaPath := "../schema.sql"
+	schemaPath := "schema.sql"
 	schemaBytes, err := os.ReadFile(schemaPath)
 	if err != nil {
 		// If schema.sql is not found, use the embedded schema
@@ -187,68 +188,68 @@ func createTestSchema(db *sql.DB) error {
 
 // createEmbeddedTestSchema creates the database schema using embedded SQL
 func createEmbeddedTestSchema(db *sql.DB) error {
-	schema := `
-CREATE TABLE IF NOT EXISTS watch_lists (
-    id VARCHAR(26) PRIMARY KEY,
-    code VARCHAR(10) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    target_buy_price DECIMAL(10,2),
-    target_sell_price DECIMAL(10,2),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+	// Create tables one by one to avoid SQL syntax errors
+	tables := []string{
+		`CREATE TABLE IF NOT EXISTS watch_lists (
+			id VARCHAR(26) PRIMARY KEY,
+			code VARCHAR(10) NOT NULL UNIQUE,
+			name VARCHAR(100) NOT NULL,
+			is_active BOOLEAN NOT NULL DEFAULT TRUE,
+			target_buy_price DECIMAL(10,2),
+			target_sell_price DECIMAL(10,2),
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS stock_prices (
+			id VARCHAR(26) PRIMARY KEY,
+			code VARCHAR(10) NOT NULL,
+			date DATE NOT NULL,
+			open_price DECIMAL(10,2) NOT NULL,
+			high_price DECIMAL(10,2) NOT NULL,
+			low_price DECIMAL(10,2) NOT NULL,
+			close_price DECIMAL(10,2) NOT NULL,
+			volume BIGINT NOT NULL,
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			UNIQUE KEY unique_code_date (code, date),
+			INDEX idx_code (code),
+			INDEX idx_date (date)
+		)`,
+		`CREATE TABLE IF NOT EXISTS technical_indicators (
+			id VARCHAR(26) PRIMARY KEY,
+			code VARCHAR(10) NOT NULL,
+			date DATE NOT NULL,
+			rsi_14 DECIMAL(5,2),
+			macd DECIMAL(10,4),
+			macd_signal DECIMAL(10,4),
+			macd_histogram DECIMAL(10,4),
+			sma_5 DECIMAL(10,2),
+			sma_25 DECIMAL(10,2),
+			sma_75 DECIMAL(10,2),
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			UNIQUE KEY unique_code_date (code, date),
+			INDEX idx_code (code),
+			INDEX idx_date (date)
+		)`,
+		`CREATE TABLE IF NOT EXISTS portfolios (
+			id VARCHAR(26) PRIMARY KEY,
+			code VARCHAR(10) NOT NULL,
+			name VARCHAR(100) NOT NULL,
+			shares INT NOT NULL,
+			purchase_price DECIMAL(10,2) NOT NULL,
+			purchase_date DATE NOT NULL,
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			INDEX idx_code (code)
+		)`,
+	}
 
-CREATE TABLE IF NOT EXISTS stock_prices (
-    id VARCHAR(26) PRIMARY KEY,
-    code VARCHAR(10) NOT NULL,
-    date DATE NOT NULL,
-    open_price DECIMAL(10,2) NOT NULL,
-    high_price DECIMAL(10,2) NOT NULL,
-    low_price DECIMAL(10,2) NOT NULL,
-    close_price DECIMAL(10,2) NOT NULL,
-    volume BIGINT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_code_date (code, date),
-    INDEX idx_code (code),
-    INDEX idx_date (date)
-);
-
-CREATE TABLE IF NOT EXISTS technical_indicators (
-    id VARCHAR(26) PRIMARY KEY,
-    code VARCHAR(10) NOT NULL,
-    date DATE NOT NULL,
-    rsi_14 DECIMAL(5,2),
-    macd DECIMAL(10,4),
-    macd_signal DECIMAL(10,4),
-    macd_histogram DECIMAL(10,4),
-    sma_5 DECIMAL(10,2),
-    sma_25 DECIMAL(10,2),
-    sma_75 DECIMAL(10,2),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_code_date (code, date),
-    INDEX idx_code (code),
-    INDEX idx_date (date)
-);
-
-CREATE TABLE IF NOT EXISTS portfolios (
-    id VARCHAR(26) PRIMARY KEY,
-    code VARCHAR(10) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    shares INT NOT NULL,
-    purchase_price DECIMAL(10,2) NOT NULL,
-    purchase_date DATE NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_code (code)
-);
-`
-
-	// Execute schema creation
-	if _, err := db.Exec(schema); err != nil {
-		return fmt.Errorf("failed to create embedded schema: %w", err)
+	// Execute each table creation separately
+	for _, table := range tables {
+		if _, err := db.Exec(table); err != nil {
+			return fmt.Errorf("failed to create table: %w", err)
+		}
 	}
 
 	return nil
@@ -258,6 +259,16 @@ CREATE TABLE IF NOT EXISTS portfolios (
 func getEnvOrDefault(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+// getEnvOrDefaultInt returns environment variable value as int or default
+func getEnvOrDefaultInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
 	}
 	return defaultValue
 }

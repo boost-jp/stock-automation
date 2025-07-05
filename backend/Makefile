@@ -114,7 +114,7 @@ db-setup: ## Create database if not exists
 
 db-migrate: ## Apply database schema using mysqldef
 	@echo "Applying database schema..."
-	@go tool mysqldef -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(DB_NAME) < schema.sql
+	@mysqldef -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(DB_NAME) < schema.sql
 
 test-db-setup: ## Create test database if not exists
 	@echo "Creating test database if not exists..."
@@ -122,7 +122,7 @@ test-db-setup: ## Create test database if not exists
 
 test-db-migrate: test-db-setup ## Apply database schema to test database
 	@echo "Applying database schema to test database..."
-	@go tool mysqldef -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(TEST_DB_NAME) < schema.sql
+	@mysqldef -u$(DB_USER) -p$(DB_PASS) -h$(DB_HOST) -P$(DB_PORT) $(TEST_DB_NAME) < schema.sql
 
 gen-sqlboiler: ## Generate SQLBoiler models
 	@echo "Generating SQLBoiler models..."

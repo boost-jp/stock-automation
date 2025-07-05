@@ -5,6 +5,8 @@ import (
 
 	"github.com/aarondl/null/v8"
 	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/aarondl/sqlboiler/v4/types"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/dao"
 	"github.com/oklog/ulid/v2"
 )
@@ -21,9 +23,9 @@ func NewWatchList() *WatchListBuilder {
 			ID:              ulid.MustNew(ulid.Now(), nil).String(),
 			Code:            "7203",
 			Name:            "トヨタ自動車",
-			IsActive:        true,
-			TargetBuyPrice:  null.Float64{},
-			TargetSellPrice: null.Float64{},
+			IsActive:        null.BoolFrom(true),
+			TargetBuyPrice:  types.NullDecimal{},
+			TargetSellPrice: types.NullDecimal{},
 		},
 	}
 }
@@ -48,19 +50,19 @@ func (b *WatchListBuilder) WithName(name string) *WatchListBuilder {
 
 // WithIsActive sets the active status
 func (b *WatchListBuilder) WithIsActive(active bool) *WatchListBuilder {
-	b.watchList.IsActive = active
+	b.watchList.IsActive = null.BoolFrom(active)
 	return b
 }
 
 // WithTargetBuyPrice sets the target buy price
 func (b *WatchListBuilder) WithTargetBuyPrice(price float64) *WatchListBuilder {
-	b.watchList.TargetBuyPrice = null.Float64From(price)
+	b.watchList.TargetBuyPrice = client.FloatToNullDecimal(price)
 	return b
 }
 
 // WithTargetSellPrice sets the target sell price
 func (b *WatchListBuilder) WithTargetSellPrice(price float64) *WatchListBuilder {
-	b.watchList.TargetSellPrice = null.Float64From(price)
+	b.watchList.TargetSellPrice = client.FloatToNullDecimal(price)
 	return b
 }
 
