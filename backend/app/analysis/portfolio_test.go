@@ -4,7 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/models"
+	"github.com/boost-jp/stock-automation/app/domain/models"
+	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +27,7 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 					Code:          "1234",
 					Name:          "Test Stock",
 					Shares:        100,
-					PurchasePrice: 1000.0,
+					PurchasePrice: client.FloatToDecimal(1000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
@@ -45,7 +46,7 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 					Code:          "5678",
 					Name:          "Test Stock 2",
 					Shares:        50,
-					PurchasePrice: 2000.0,
+					PurchasePrice: client.FloatToDecimal(2000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
@@ -64,14 +65,14 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 					Code:          "1234",
 					Name:          "Test Stock 1",
 					Shares:        100,
-					PurchasePrice: 1000.0,
+					PurchasePrice: client.FloatToDecimal(1000.0),
 					PurchaseDate:  time.Now(),
 				},
 				{
 					Code:          "5678",
 					Name:          "Test Stock 2",
 					Shares:        50,
-					PurchasePrice: 2000.0,
+					PurchasePrice: client.FloatToDecimal(2000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
@@ -100,7 +101,7 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 					Code:          "1234",
 					Name:          "Test Stock",
 					Shares:        100,
-					PurchasePrice: 1000.0,
+					PurchasePrice: client.FloatToDecimal(1000.0),
 					PurchaseDate:  time.Now(),
 				},
 			},
@@ -372,7 +373,7 @@ func TestPortfolioSummaryEdgeCases(t *testing.T) {
 				Code:          "NEG",
 				Name:          "Negative Stock",
 				Shares:        100,
-				PurchasePrice: 1000.0,
+				PurchasePrice: client.FloatToDecimal(1000.0),
 				PurchaseDate:  time.Now(),
 			},
 		}
