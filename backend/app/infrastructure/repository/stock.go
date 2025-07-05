@@ -26,6 +26,10 @@ type StockRepository interface {
 
 	// Watch list operations
 	GetActiveWatchList(ctx context.Context) ([]*models.WatchList, error)
+	GetWatchListItem(ctx context.Context, id string) (*models.WatchList, error)
+	AddToWatchList(ctx context.Context, item *models.WatchList) error
+	UpdateWatchList(ctx context.Context, item *models.WatchList) error
+	DeleteFromWatchList(ctx context.Context, id string) error
 }
 
 // stockRepositoryImpl implements StockRepository using SQLBoiler.
@@ -212,4 +216,64 @@ func (r *stockRepositoryImpl) GetActiveWatchList(ctx context.Context) ([]*models
 	}
 
 	return watchList, nil
+}
+
+// GetWatchListItem retrieves a watch list item by ID.
+func (r *stockRepositoryImpl) GetWatchListItem(ctx context.Context, id string) (*models.WatchList, error) {
+	daoItem, err := dao.FindWatchList(ctx, r.db, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &models.WatchList{
+		ID:              daoItem.ID,
+		Code:            daoItem.Code,
+		Name:            daoItem.Name,
+		TargetBuyPrice:  daoItem.TargetBuyPrice,
+		TargetSellPrice: daoItem.TargetSellPrice,
+		IsActive:        daoItem.IsActive,
+		CreatedAt:       daoItem.CreatedAt,
+		UpdatedAt:       daoItem.UpdatedAt,
+	}, nil
+}
+
+// AddToWatchList adds a new item to the watch list.
+func (r *stockRepositoryImpl) AddToWatchList(ctx context.Context, item *models.WatchList) error {
+	daoItem := &dao.WatchList{
+		ID:              item.ID,
+		Code:            item.Code,
+		Name:            item.Name,
+		TargetBuyPrice:  item.TargetBuyPrice,
+		TargetSellPrice: item.TargetSellPrice,
+		IsActive:        item.IsActive,
+	}
+
+	return daoItem.Insert(ctx, r.db, boil.Infer())
+}
+
+// UpdateWatchList updates an existing watch list item.
+func (r *stockRepositoryImpl) UpdateWatchList(ctx context.Context, item *models.WatchList) error {
+	daoItem := &dao.WatchList{
+		ID:              item.ID,
+		Code:            item.Code,
+		Name:            item.Name,
+		TargetBuyPrice:  item.TargetBuyPrice,
+		TargetSellPrice: item.TargetSellPrice,
+		IsActive:        item.IsActive,
+		CreatedAt:       item.CreatedAt,
+		UpdatedAt:       item.UpdatedAt,
+	}
+
+	_, err := daoItem.Update(ctx, r.db, boil.Infer())
+	return err
+}
+
+// DeleteFromWatchList removes an item from the watch list.
+func (r *stockRepositoryImpl) DeleteFromWatchList(ctx context.Context, id string) error {
+	daoItem := &dao.WatchList{ID: id}
+	_, err := daoItem.Delete(ctx, r.db)
+	return err
 }
