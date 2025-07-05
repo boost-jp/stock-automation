@@ -1,10 +1,11 @@
-package main
+package commands
 
 import (
 	"context"
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/aarondl/null/v8"
 	"github.com/aarondl/sqlboiler/v4/types"
@@ -15,25 +16,29 @@ import (
 	"github.com/ericlagergren/decimal"
 )
 
-func main() {
+// RunWatchListManager runs the watchlist manager command.
+func RunWatchListManager(connMgr database.ConnectionManager, args []string) {
 	// Command line flags
+	watchlistCmd := flag.NewFlagSet("watchlist", flag.ExitOnError)
 	var (
-		action          = flag.String("action", "list", "Action to perform: list, add, update, delete, toggle")
-		code            = flag.String("code", "", "Stock code")
-		name            = flag.String("name", "", "Stock name")
-		targetBuyPrice  = flag.Float64("buy", 0, "Target buy price")
-		targetSellPrice = flag.Float64("sell", 0, "Target sell price")
-		watchListID     = flag.String("id", "", "Watch list ID (for update/delete/toggle)")
+		action          = watchlistCmd.String("action", "list", "Action to perform: list, add, update, delete, toggle")
+		code            = watchlistCmd.String("code", "", "Stock code")
+		name            = watchlistCmd.String("name", "", "Stock name")
+		targetBuyPrice  = watchlistCmd.Float64("buy", 0, "Target buy price")
+		targetSellPrice = watchlistCmd.Float64("sell", 0, "Target sell price")
+		watchListID     = watchlistCmd.String("id", "", "Watch list ID (for update/delete/toggle)")
 	)
-	flag.Parse()
 
-	// Database connection
-	config := database.DefaultDatabaseConfig()
-	connMgr, err := database.NewConnectionManager(config)
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+	watchlistCmd.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: stock-automation watchlist [flags]\n\n")
+		fmt.Fprintf(os.Stderr, "Manage watch list items\n\n")
+		fmt.Fprintf(os.Stderr, "Flags:\n")
+		watchlistCmd.PrintDefaults()
 	}
-	defer connMgr.Close()
+
+	if err := watchlistCmd.Parse(args); err != nil {
+		log.Fatal(err)
+	}
 
 	// Initialize repository
 	db := connMgr.GetDB()
@@ -213,3 +218,4 @@ func floatToNullDecimal(value float64) types.NullDecimal {
 	d.SetFloat64(value)
 	return types.NullDecimal{Big: d}
 }
+

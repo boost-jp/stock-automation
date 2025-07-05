@@ -1,9 +1,11 @@
-package main
+package commands
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -28,6 +30,55 @@ func NewBulkDataCollector(stockRepo repository.StockRepository, stockClient clie
 		maxRetries:  3,
 		maxWorkers:  3, // 並列度を3に制限（API制限を考慮）
 	}
+}
+
+// RunBulkDataCollector runs the bulk data collector command.
+func RunBulkDataCollector(connMgr database.ConnectionManager, args []string) {
+	// Command line flags
+	bulkCmd := flag.NewFlagSet("bulk-collect", flag.ExitOnError)
+	var (
+		days     = bulkCmd.Int("days", 365, "Number of days of historical data to collect")
+		parallel = bulkCmd.Bool("parallel", true, "Use parallel processing")
+	)
+
+	bulkCmd.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: stock-automation bulk-collect [flags]\n\n")
+		fmt.Fprintf(os.Stderr, "Collect historical data for technical analysis\n\n")
+		fmt.Fprintf(os.Stderr, "Flags:\n")
+		bulkCmd.PrintDefaults()
+	}
+
+	if err := bulkCmd.Parse(args); err != nil {
+		log.Fatal(err)
+	}
+
+	// Create repositories and client
+	db := connMgr.GetDB()
+	stockRepo := repository.NewStockRepository(db)
+	stockClient := client.NewYahooFinanceClient()
+
+	// Create bulk data collector
+	bulkCollector := NewBulkDataCollector(stockRepo, stockClient)
+
+	// Get stock codes for analysis
+	stockCodes := bulkCollector.GetStockCodesForAnalysis()
+
+	// Collect historical data
+	ctx := context.Background()
+
+	if *parallel {
+		err := bulkCollector.CollectHistoricalDataParallel(ctx, stockCodes, *days)
+		if err != nil {
+			log.Fatal("データ並列一括取得エラー:", err)
+		}
+	} else {
+		err := bulkCollector.CollectHistoricalData(ctx, stockCodes, *days)
+		if err != nil {
+			log.Fatal("データ一括取得エラー:", err)
+		}
+	}
+
+	log.Println("📊 テクニカル分析用データの一括取得が完了しました")
 }
 
 // CollectHistoricalData collects historical data for multiple stocks.
@@ -220,33 +271,3 @@ func (bdc *BulkDataCollector) GetStockCodesForAnalysis() []string {
 	}
 }
 
-func main() {
-	// Initialize database connection
-	config := database.DefaultDatabaseConfig()
-	connMgr, err := database.NewConnectionManager(config)
-	if err != nil {
-		log.Fatal("データベース接続エラー:", err)
-	}
-	defer connMgr.Close()
-
-	// Create repositories and client
-	db := connMgr.GetDB()
-	stockRepo := repository.NewStockRepository(db)
-	stockClient := client.NewYahooFinanceClient()
-
-	// Create bulk data collector
-	bulkCollector := NewBulkDataCollector(stockRepo, stockClient)
-
-	// Get stock codes for analysis
-	stockCodes := bulkCollector.GetStockCodesForAnalysis()
-
-	// Collect historical data for the past 365 days using parallel processing
-	ctx := context.Background()
-
-	err = bulkCollector.CollectHistoricalDataParallel(ctx, stockCodes, 365)
-	if err != nil {
-		log.Fatal("データ一括取得エラー:", err)
-	}
-
-	log.Println("📊 テクニカル分析用データの並列一括取得が完了しました")
-}
