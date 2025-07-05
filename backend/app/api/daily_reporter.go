@@ -7,21 +7,29 @@ import (
 
 	"github.com/boost-jp/stock-automation/app/analysis"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
-	"github.com/boost-jp/stock-automation/app/notification"
-	"github.com/boost-jp/stock-automation/internal/repository"
+	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
+	"github.com/boost-jp/stock-automation/app/repository"
 	"github.com/sirupsen/logrus"
 )
 
 type DailyReporter struct {
 	repositories *repository.Repositories
 	stockClient  client.StockDataClient
-	notifier     *notification.SlackNotifier
+	notifier     notification.NotificationService
 }
 
-func NewDailyReporter(repos *repository.Repositories, notifier *notification.SlackNotifier) *DailyReporter {
+func NewDailyReporter(repos *repository.Repositories, notifier notification.NotificationService) *DailyReporter {
 	return &DailyReporter{
 		repositories: repos,
 		stockClient:  client.NewYahooFinanceClient(),
+		notifier:     notifier,
+	}
+}
+
+func NewDailyReporterWithClient(repos *repository.Repositories, stockClient client.StockDataClient, notifier notification.NotificationService) *DailyReporter {
+	return &DailyReporter{
+		repositories: repos,
+		stockClient:  stockClient,
 		notifier:     notifier,
 	}
 }

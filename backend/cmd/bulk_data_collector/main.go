@@ -9,7 +9,7 @@ import (
 
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
-	"github.com/boost-jp/stock-automation/internal/repository"
+	"github.com/boost-jp/stock-automation/app/repository"
 )
 
 // BulkDataCollector handles bulk historical data collection for technical analysis.

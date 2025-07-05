@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/notification"
+	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
 	"github.com/go-co-op/gocron"
 	"github.com/sirupsen/logrus"
 )
@@ -15,7 +15,7 @@ type DataScheduler struct {
 	reporter  *DailyReporter
 }
 
-func NewDataScheduler(collector *DataCollector, notifier *notification.SlackNotifier) *DataScheduler {
+func NewDataScheduler(collector *DataCollector, notifier notification.NotificationService) *DataScheduler {
 	s := gocron.NewScheduler(time.UTC)
 	reporter := NewDailyReporter(collector.repositories, notifier)
 

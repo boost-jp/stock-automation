@@ -7,7 +7,7 @@ import (
 
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
-	"github.com/boost-jp/stock-automation/internal/repository"
+	"github.com/boost-jp/stock-automation/app/repository"
 	"github.com/sirupsen/logrus"
 )
 

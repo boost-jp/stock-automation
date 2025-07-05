@@ -10,8 +10,8 @@ import (
 
 	"github.com/boost-jp/stock-automation/app/api"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
-	"github.com/boost-jp/stock-automation/app/notification"
-	"github.com/boost-jp/stock-automation/internal/repository"
+	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
+	"github.com/boost-jp/stock-automation/app/repository"
 	"github.com/sirupsen/logrus"
 )
 
