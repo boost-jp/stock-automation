@@ -89,7 +89,7 @@ func TestRateLimiter_Wait(t *testing.T) {
 func TestRateLimiter_Wait_WithCancelledContext(t *testing.T) {
 	rl := NewRateLimiter(1)
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Make first request to consume the token
 	if err := rl.Wait(ctx); err != nil {
 		t.Fatalf("First Wait() error = %v", err)
@@ -149,11 +149,11 @@ func TestRateLimiter_TryWait(t *testing.T) {
 func TestRateLimiter_Concurrent(t *testing.T) {
 	rl := NewRateLimiter(10)
 	ctx := context.Background()
-	
+
 	// Launch multiple goroutines
 	done := make(chan bool, 20)
 	start := time.Now()
-	
+
 	for i := 0; i < 20; i++ {
 		go func() {
 			err := rl.Wait(ctx)
@@ -163,12 +163,12 @@ func TestRateLimiter_Concurrent(t *testing.T) {
 			done <- true
 		}()
 	}
-	
+
 	// Wait for all goroutines
 	for i := 0; i < 20; i++ {
 		<-done
 	}
-	
+
 	elapsed := time.Since(start)
 	// With 10 RPS and 20 requests, it should take at least 1 second
 	if elapsed < 900*time.Millisecond {

@@ -8,21 +8,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
-	"github.com/aarondl/sqlboiler/v4/types"
 )
 
 // Mock implementations for testing
 
 type mockStockRepository struct {
-	watchList      []*models.WatchList
-	portfolioErr   error
-	watchListErr   error
-	savePriceErr   error
-	savePricesErr  error
-	cleanupErr     error
-	savedPrices    []*models.StockPrice
+	watchList     []*models.WatchList
+	portfolioErr  error
+	watchListErr  error
+	savePriceErr  error
+	savePricesErr error
+	cleanupErr    error
+	savedPrices   []*models.StockPrice
 }
 
 func (m *mockStockRepository) SaveStockPrice(ctx context.Context, price *models.StockPrice) error {
@@ -205,7 +205,7 @@ func TestNewCollectDataUseCase(t *testing.T) {
 
 func TestCollectDataUseCase_UpdateWatchList(t *testing.T) {
 	uc := &CollectDataUseCase{}
-	
+
 	// UpdateWatchList is now a no-op
 	err := uc.UpdateWatchList(context.Background())
 	if err != nil {
@@ -215,7 +215,7 @@ func TestCollectDataUseCase_UpdateWatchList(t *testing.T) {
 
 func TestCollectDataUseCase_UpdatePortfolio(t *testing.T) {
 	uc := &CollectDataUseCase{}
-	
+
 	// UpdatePortfolio is now a no-op
 	err := uc.UpdatePortfolio(context.Background())
 	if err != nil {
@@ -225,13 +225,13 @@ func TestCollectDataUseCase_UpdatePortfolio(t *testing.T) {
 
 func TestCollectDataUseCase_UpdateAllPrices(t *testing.T) {
 	tests := []struct {
-		name          string
-		watchList     []*models.WatchList
-		portfolio     []*models.Portfolio
-		watchListErr  error
-		portfolioErr  error
-		clientErr     error
-		wantErr       bool
+		name         string
+		watchList    []*models.WatchList
+		portfolio    []*models.Portfolio
+		watchListErr error
+		portfolioErr error
+		clientErr    error
+		wantErr      bool
 	}{
 		{
 			name: "successful update with watch list and portfolio",
@@ -251,8 +251,8 @@ func TestCollectDataUseCase_UpdateAllPrices(t *testing.T) {
 			wantErr:      true,
 		},
 		{
-			name:      "portfolio error",
-			watchList: []*models.WatchList{{Code: "7203", Name: "Toyota"}},
+			name:         "portfolio error",
+			watchList:    []*models.WatchList{{Code: "7203", Name: "Toyota"}},
 			portfolioErr: errors.New("database error"),
 			wantErr:      true,
 		},
@@ -290,11 +290,11 @@ func TestCollectDataUseCase_UpdateAllPrices(t *testing.T) {
 
 func TestCollectDataUseCase_UpdatePricesForStocks(t *testing.T) {
 	tests := []struct {
-		name         string
-		watchList    []*models.WatchList
-		portfolio    []*models.Portfolio
-		maxWorkers   int
-		clientErr    error
+		name          string
+		watchList     []*models.WatchList
+		portfolio     []*models.Portfolio
+		maxWorkers    int
+		clientErr     error
 		expectedCalls int
 	}{
 		{
@@ -311,10 +311,10 @@ func TestCollectDataUseCase_UpdatePricesForStocks(t *testing.T) {
 			expectedCalls: 3, // 7203, 6758, 9984 (unique)
 		},
 		{
-			name:       "empty lists",
-			watchList:  []*models.WatchList{},
-			portfolio:  []*models.Portfolio{},
-			maxWorkers: 5,
+			name:          "empty lists",
+			watchList:     []*models.WatchList{},
+			portfolio:     []*models.Portfolio{},
+			maxWorkers:    5,
 			expectedCalls: 0,
 		},
 		{
@@ -340,7 +340,7 @@ func TestCollectDataUseCase_UpdatePricesForStocks(t *testing.T) {
 			uc.maxWorkers = tt.maxWorkers
 
 			err := uc.UpdatePricesForStocks(context.Background(), tt.watchList, tt.portfolio)
-			
+
 			// Should not return error even if individual updates fail
 			if err != nil {
 				t.Errorf("UpdatePricesForStocks() error = %v, want nil", err)
@@ -355,11 +355,11 @@ func TestCollectDataUseCase_UpdatePricesForStocks(t *testing.T) {
 
 func TestCollectDataUseCase_UpdateStockPrice(t *testing.T) {
 	tests := []struct {
-		name         string
-		stockCode    string
-		clientErr    error
-		saveErr      error
-		wantErr      bool
+		name      string
+		stockCode string
+		clientErr error
+		saveErr   error
+		wantErr   bool
 	}{
 		{
 			name:      "successful price update",
@@ -406,13 +406,13 @@ func TestCollectDataUseCase_UpdateStockPrice(t *testing.T) {
 
 func TestCollectDataUseCase_CollectHistoricalData(t *testing.T) {
 	tests := []struct {
-		name          string
-		stockCode     string
-		days          int
+		name           string
+		stockCode      string
+		days           int
 		historicalData []*models.StockPrice
-		clientErr     error
-		saveErr       error
-		wantErr       bool
+		clientErr      error
+		saveErr        error
+		wantErr        bool
 	}{
 		{
 			name:      "successful historical data collection",
@@ -432,12 +432,12 @@ func TestCollectDataUseCase_CollectHistoricalData(t *testing.T) {
 			wantErr:   true,
 		},
 		{
-			name:      "save error",
-			stockCode: "7203",
-			days:      30,
+			name:           "save error",
+			stockCode:      "7203",
+			days:           30,
 			historicalData: []*models.StockPrice{{Code: "7203"}},
-			saveErr:   errors.New("database error"),
-			wantErr:   true,
+			saveErr:        errors.New("database error"),
+			wantErr:        true,
 		},
 	}
 
@@ -471,7 +471,7 @@ func TestCollectDataUseCase_IsMarketOpen(t *testing.T) {
 
 	// Note: This test will have different results depending on when it's run
 	// For a more reliable test, we would need to mock time.Now()
-	
+
 	isOpen := uc.IsMarketOpen()
 	// Just verify it returns a boolean without error
 	_ = isOpen
@@ -519,18 +519,18 @@ func TestCollectDataUseCase_ConcurrentUpdates(t *testing.T) {
 	// Test that concurrent updates are properly limited by maxWorkers
 	stockRepo := &mockStockRepository{}
 	portfolioRepo := &mockPortfolioRepository{}
-	
+
 	// Track concurrent executions
 	var maxConcurrent int
 	var currentConcurrent int
 	var mu sync.Mutex
-	
+
 	stockClient := &mockStockDataClient{
 		currentPrice: &models.StockPrice{
 			ClosePrice: client.FloatToDecimal(100),
 		},
 	}
-	
+
 	// Override GetCurrentPrice to track concurrency
 	originalGetCurrentPrice := stockClient.GetCurrentPrice
 	stockClient.GetCurrentPrice = func(stockCode string) (*models.StockPrice, error) {
@@ -540,16 +540,16 @@ func TestCollectDataUseCase_ConcurrentUpdates(t *testing.T) {
 			maxConcurrent = currentConcurrent
 		}
 		mu.Unlock()
-		
+
 		// Simulate some work
 		time.Sleep(10 * time.Millisecond)
-		
+
 		result, err := originalGetCurrentPrice(stockCode)
-		
+
 		mu.Lock()
 		currentConcurrent--
 		mu.Unlock()
-		
+
 		return result, err
 	}
 
@@ -566,7 +566,7 @@ func TestCollectDataUseCase_ConcurrentUpdates(t *testing.T) {
 
 	ctx := context.Background()
 	err := uc.UpdatePricesForStocks(ctx, watchList, nil)
-	
+
 	if err != nil {
 		t.Errorf("UpdatePricesForStocks() error = %v", err)
 	}

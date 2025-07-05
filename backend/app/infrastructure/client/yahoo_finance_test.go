@@ -182,10 +182,10 @@ func TestYahooFinanceClient_GetCurrentPrice_HTTPErrors(t *testing.T) {
 			defer server.Close()
 
 			config := YahooFinanceConfig{
-				BaseURL:       server.URL,
-				Timeout:       1 * time.Second,
-				RetryCount:    0, // Disable retries for predictable testing
-				RateLimitRPS:  10,
+				BaseURL:      server.URL,
+				Timeout:      1 * time.Second,
+				RetryCount:   0, // Disable retries for predictable testing
+				RateLimitRPS: 10,
 			}
 
 			client := NewYahooFinanceClientWithConfig(config)
