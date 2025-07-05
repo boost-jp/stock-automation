@@ -64,7 +64,8 @@
       "Bash(backend/go build ./app/domain/)",
       "Bash(export GOPATH=/tmp/gopath)",
       "Bash(export:*)",
-      "Bash(go test:*)"
+      "Bash(go test:*)",
+      "Bash(go:*)"
     ],
     "deny": []
   }

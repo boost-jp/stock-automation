@@ -41,8 +41,16 @@
 1. Create domain services from existing analysis logic
 2. Write comprehensive tests using cmp.Diff
 3. Update go.mod with required dependencies
-4. Verify local compilation before creating PR
-5. Document new patterns and rules in CLAUDE.md
+4. **Pre-PR Validation**:
+   - Run `go test` to verify tests pass
+   - Run `go fmt` to format code
+   - Only create PR if local tests pass
+5. **CI Workflow**:
+   - Create PR and push changes
+   - Poll CI status until completion
+   - If CI fails, fix issues and repeat
+   - Wait for CI to pass before considering PR ready
+6. Document new patterns and rules in CLAUDE.md
 
 ## SQLBoiler Integration
 

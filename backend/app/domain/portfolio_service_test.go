@@ -7,7 +7,6 @@ import (
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestNewPortfolioService(t *testing.T) {
