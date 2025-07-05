@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -89,7 +90,10 @@ func TestDataCollection_CompleteFlow(t *testing.T) {
 
 		for _, w := range watchList {
 			if err := stockRepo.AddToWatchList(ctx, w); err != nil {
-				t.Fatalf("Failed to add to watch list: %v", err)
+				// Ignore duplicate key errors since tests may run in parallel
+				if !strings.Contains(err.Error(), "Duplicate entry") {
+					t.Fatalf("Failed to add to watch list: %v", err)
+				}
 			}
 		}
 

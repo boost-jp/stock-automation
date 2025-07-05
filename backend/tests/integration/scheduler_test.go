@@ -2,6 +2,8 @@ package integration
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -236,6 +238,7 @@ func (t *trackingStockClient) GetCurrentPrice(stockCode string) (*models.StockPr
 	}
 
 	return &models.StockPrice{
+		ID:         fmt.Sprintf("tracking-%s-%d", stockCode, time.Now().UnixNano()),
 		Code:       stockCode,
 		Date:       time.Now(),
 		ClosePrice: client.FloatToDecimal(price),
@@ -243,6 +246,8 @@ func (t *trackingStockClient) GetCurrentPrice(stockCode string) (*models.StockPr
 		HighPrice:  client.FloatToDecimal(price * 1.01),
 		LowPrice:   client.FloatToDecimal(price * 0.98),
 		Volume:     1000000,
+		CreatedAt:  fixture.NullTimeFrom(time.Now()),
+		UpdatedAt:  fixture.NullTimeFrom(time.Now()),
 	}, nil
 }
 
@@ -292,6 +297,7 @@ func (c *concurrentSafeStockClient) GetCurrentPrice(stockCode string) (*models.S
 	}
 
 	return &models.StockPrice{
+		ID:         fmt.Sprintf("concurrent-%s-%d", stockCode, time.Now().UnixNano()),
 		Code:       stockCode,
 		Date:       time.Now(),
 		ClosePrice: client.FloatToDecimal(price),
@@ -299,6 +305,8 @@ func (c *concurrentSafeStockClient) GetCurrentPrice(stockCode string) (*models.S
 		HighPrice:  client.FloatToDecimal(price),
 		LowPrice:   client.FloatToDecimal(price),
 		Volume:     1000000,
+		CreatedAt:  fixture.NullTimeFrom(time.Now()),
+		UpdatedAt:  fixture.NullTimeFrom(time.Now()),
 	}, nil
 }
 
@@ -353,7 +361,10 @@ func setupSchedulerTestData(t *testing.T, ctx context.Context, stockRepo reposit
 
 	for _, w := range watchList {
 		if err := stockRepo.AddToWatchList(ctx, w); err != nil {
-			t.Fatalf("Failed to add watch list: %v", err)
+			// Ignore duplicate key errors since tests may run in parallel
+			if !strings.Contains(err.Error(), "Duplicate entry") {
+				t.Fatalf("Failed to add watch list: %v", err)
+			}
 		}
 	}
 
@@ -379,7 +390,10 @@ func setupSchedulerTestData(t *testing.T, ctx context.Context, stockRepo reposit
 
 	for _, p := range portfolios {
 		if err := portfolioRepo.Create(ctx, p); err != nil {
-			t.Fatalf("Failed to create portfolio: %v", err)
+			// Ignore duplicate key errors since tests may run in parallel
+			if !strings.Contains(err.Error(), "Duplicate entry") {
+				t.Fatalf("Failed to create portfolio: %v", err)
+			}
 		}
 	}
 }
@@ -397,7 +411,10 @@ func setupExtendedTestData(t *testing.T, ctx context.Context, stockRepo reposito
 	}
 
 	if err := stockRepo.AddToWatchList(ctx, additionalWatchList); err != nil {
-		t.Fatalf("Failed to add additional watch list: %v", err)
+		// Ignore duplicate key errors since tests may run in parallel
+		if !strings.Contains(err.Error(), "Duplicate entry") {
+			t.Fatalf("Failed to add additional watch list: %v", err)
+		}
 	}
 
 	// Add to portfolio
@@ -411,6 +428,9 @@ func setupExtendedTestData(t *testing.T, ctx context.Context, stockRepo reposito
 	}
 
 	if err := portfolioRepo.Create(ctx, additionalPortfolio); err != nil {
-		t.Fatalf("Failed to create additional portfolio: %v", err)
+		// Ignore duplicate key errors since tests may run in parallel
+		if !strings.Contains(err.Error(), "Duplicate entry") {
+			t.Fatalf("Failed to create additional portfolio: %v", err)
+		}
 	}
 }
