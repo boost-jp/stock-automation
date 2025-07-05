@@ -75,7 +75,8 @@
       "Bash(gh pr comments:*)",
       "Bash(gh pr comment:*)",
       "Bash(rg:*)",
-      "Bash(TEST_DB_PORT=3309 make test)"
+      "Bash(TEST_DB_PORT=3309 make test)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

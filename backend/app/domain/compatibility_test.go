@@ -1,10 +1,9 @@
-package unit
+package domain
 
 import (
 	"testing"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/domain"
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/google/go-cmp/cmp"
@@ -119,7 +118,7 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			summary := domain.CalculatePortfolioSummary(tt.portfolio, tt.currentPrices)
+			summary := CalculatePortfolioSummary(tt.portfolio, tt.currentPrices)
 
 			if diff := cmp.Diff(tt.expectedValue, summary.TotalValue); diff != "" {
 				t.Errorf("TotalValue mismatch (-want +got):\n%s", diff)
@@ -140,17 +139,17 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 func TestGeneratePortfolioReport(t *testing.T) {
 	tests := []struct {
 		name             string
-		summary          *domain.PortfolioSummary
+		summary          *PortfolioSummary
 		expectedContains []string
 	}{
 		{
 			name: "Report with profit",
-			summary: &domain.PortfolioSummary{
+			summary: &PortfolioSummary{
 				TotalValue:       110000.0,
 				TotalCost:        100000.0,
 				TotalGain:        10000.0,
 				TotalGainPercent: 10.0,
-				Holdings: []domain.HoldingSummary{
+				Holdings: []HoldingSummary{
 					{
 						Code:          "1234",
 						Name:          "Test Stock",
@@ -182,12 +181,12 @@ func TestGeneratePortfolioReport(t *testing.T) {
 		},
 		{
 			name: "Report with loss",
-			summary: &domain.PortfolioSummary{
+			summary: &PortfolioSummary{
 				TotalValue:       90000.0,
 				TotalCost:        100000.0,
 				TotalGain:        -10000.0,
 				TotalGainPercent: -10.0,
-				Holdings: []domain.HoldingSummary{
+				Holdings: []HoldingSummary{
 					{
 						Code:          "5678",
 						Name:          "Test Stock 2",
@@ -214,12 +213,12 @@ func TestGeneratePortfolioReport(t *testing.T) {
 		},
 		{
 			name: "Empty portfolio report",
-			summary: &domain.PortfolioSummary{
+			summary: &PortfolioSummary{
 				TotalValue:       0.0,
 				TotalCost:        0.0,
 				TotalGain:        0.0,
 				TotalGainPercent: 0.0,
-				Holdings:         []domain.HoldingSummary{},
+				Holdings:         []HoldingSummary{},
 				UpdatedAt:        time.Now(),
 			},
 			expectedContains: []string{
@@ -230,7 +229,7 @@ func TestGeneratePortfolioReport(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			report := domain.GeneratePortfolioReport(tt.summary)
+			report := GeneratePortfolioReport(tt.summary)
 
 			for _, expectedString := range tt.expectedContains {
 				if !contains(report, expectedString) {
@@ -244,7 +243,7 @@ func TestGeneratePortfolioReport(t *testing.T) {
 func TestPortfolioCalculations(t *testing.T) {
 	t.Run("Gain calculation", func(t *testing.T) {
 		// Test gain calculation for individual holding
-		holding := domain.HoldingSummary{
+		holding := HoldingSummary{
 			Shares:        100,
 			CurrentPrice:  1100.0,
 			PurchasePrice: 1000.0,
@@ -270,7 +269,7 @@ func TestPortfolioCalculations(t *testing.T) {
 	})
 
 	t.Run("Portfolio aggregation", func(t *testing.T) {
-		holdings := []domain.HoldingSummary{
+		holdings := []HoldingSummary{
 			{
 				CurrentValue: 110000.0,
 				PurchaseCost: 100000.0,
@@ -302,18 +301,3 @@ func TestPortfolioCalculations(t *testing.T) {
 	})
 }
 
-// Helper function to check if a string contains a substring
-func contains(s, substr string) bool {
-	if len(substr) == 0 {
-		return true
-	}
-	if len(s) < len(substr) {
-		return false
-	}
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
