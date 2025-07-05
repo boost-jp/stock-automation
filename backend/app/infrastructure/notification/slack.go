@@ -235,8 +235,8 @@ func (s *SlackNotifier) SendComprehensiveReport(report string, summary *domain.P
 	// Add holdings details if available
 	if len(summary.Holdings) > 0 {
 		holdings := SlackAttachment{
-			Color: "info",
-			Title: "📈 保有銘柄詳細",
+			Color:  "info",
+			Title:  "📈 保有銘柄詳細",
 			Fields: []SlackField{},
 		}
 
@@ -245,10 +245,10 @@ func (s *SlackNotifier) SendComprehensiveReport(report string, summary *domain.P
 			if holding.Gain < 0 {
 				holdingColor = "🔴"
 			}
-			
+
 			holdings.Fields = append(holdings.Fields, SlackField{
 				Title: fmt.Sprintf("%s %s (%s)", holdingColor, holding.Name, holding.Code),
-				Value: fmt.Sprintf("数量: %d | 現在値: ¥%,.0f | 損益: ¥%,.0f (%.1f%%)", 
+				Value: fmt.Sprintf("数量: %d | 現在値: ¥%,.0f | 損益: ¥%,.0f (%.1f%%)",
 					holding.Shares, holding.CurrentPrice, holding.Gain, holding.GainPercent),
 				Short: false,
 			})
@@ -263,11 +263,11 @@ func (s *SlackNotifier) SendComprehensiveReport(report string, summary *domain.P
 	}
 
 	metadata := map[string]interface{}{
-		"total_value":      summary.TotalValue,
-		"total_cost":       summary.TotalCost,
-		"total_gain":       summary.TotalGain,
+		"total_value":        summary.TotalValue,
+		"total_cost":         summary.TotalCost,
+		"total_gain":         summary.TotalGain,
 		"total_gain_percent": summary.TotalGainPercent,
-		"holdings_count":   len(summary.Holdings),
+		"holdings_count":     len(summary.Holdings),
 	}
 
 	return s.sendSlackMessageWithLog(context.Background(), msg, "comprehensive_report", metadata)

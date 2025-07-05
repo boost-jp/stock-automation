@@ -66,10 +66,10 @@ func TestSlackNotifier_SendStockAlert(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		alertType  string
-		stockCode  string
-		stockName  string
+		name         string
+		alertType    string
+		stockCode    string
+		stockName    string
 		currentPrice float64
 		targetPrice  float64
 	}{
@@ -233,7 +233,7 @@ func TestSlackNotifier_NetworkError(t *testing.T) {
 
 // MockNotificationLogRepository for testing
 type MockNotificationLogRepository struct {
-	CreateFunc      func(ctx context.Context, log *repository.NotificationLog) error
+	CreateFunc       func(ctx context.Context, log *repository.NotificationLog) error
 	UpdateStatusFunc func(ctx context.Context, id int64, status string, errorMessage *string, sentAt *time.Time) error
 }
 
