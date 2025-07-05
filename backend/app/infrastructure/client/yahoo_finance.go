@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -20,8 +21,9 @@ type StockDataClient interface {
 
 // YahooFinanceClient implements StockDataClient using Yahoo Finance API.
 type YahooFinanceClient struct {
-	client  *resty.Client
-	baseURL string
+	client      *resty.Client
+	baseURL     string
+	rateLimiter *RateLimiter
 }
 
 // Yahoo Finance APIレスポンス構造.
@@ -62,6 +64,7 @@ type YahooFinanceConfig struct {
 	RetryWaitTime time.Duration
 	RetryMaxWait  time.Duration
 	UserAgent     string
+	RateLimitRPS  int
 }
 
 // NewYahooFinanceClient creates a new Yahoo Finance client.
@@ -79,12 +82,21 @@ func NewYahooFinanceClientWithConfig(config YahooFinanceConfig) *YahooFinanceCli
 
 	// Add exponential backoff for retries
 	client.AddRetryCondition(func(r *resty.Response, err error) bool {
-		return r.StatusCode() >= 500 || r.StatusCode() == 429
+		// Retry on server errors or rate limit
+		if r != nil && (r.StatusCode() >= 500 || r.StatusCode() == 429) {
+			return true
+		}
+		// Retry on network errors
+		if err != nil && IsRetryableError(err) {
+			return true
+		}
+		return false
 	})
 
 	return &YahooFinanceClient{
-		client:  client,
-		baseURL: config.BaseURL,
+		client:      client,
+		baseURL:     config.BaseURL,
+		rateLimiter: NewRateLimiter(config.RateLimitRPS),
 	}
 }
 
@@ -97,21 +109,33 @@ func DefaultYahooFinanceConfig() YahooFinanceConfig {
 		RetryWaitTime: 1 * time.Second,
 		RetryMaxWait:  10 * time.Second,
 		UserAgent:     "Mozilla/5.0 (compatible; StockAutomation/1.0)",
+		RateLimitRPS:  10,
 	}
 }
 
 // GetCurrentPrice retrieves real-time stock price.
 func (y *YahooFinanceClient) GetCurrentPrice(stockCode string) (*models.StockPrice, error) {
+	// Apply rate limiting
+	if err := y.rateLimiter.Wait(context.Background()); err != nil {
+		return nil, fmt.Errorf("rate limiter error: %w", err)
+	}
+
 	url := fmt.Sprintf("%s/v8/finance/chart/%s.T", y.baseURL, stockCode)
 
 	resp, err := y.client.R().
 		SetHeader("User-Agent", "Mozilla/5.0 (compatible; StockAutomation/1.0)").
 		Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch data: %w", err)
+		if IsRetryableError(err) {
+			return nil, fmt.Errorf("temporary error fetching data for %s: %w", stockCode, err)
+		}
+		return nil, fmt.Errorf("failed to fetch data for %s: %w", stockCode, err)
 	}
 
 	if resp.StatusCode() != 200 {
+		if httpErr := ClassifyHTTPError(resp.StatusCode()); httpErr != nil {
+			return nil, fmt.Errorf("API error for %s: %w (status: %d)", stockCode, httpErr, resp.StatusCode())
+		}
 		return nil, fmt.Errorf("API returned status code: %d", resp.StatusCode())
 	}
 
@@ -147,6 +171,11 @@ func (y *YahooFinanceClient) GetCurrentPrice(stockCode string) (*models.StockPri
 
 // GetHistoricalData retrieves historical stock price data.
 func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]*models.StockPrice, error) {
+	// Apply rate limiting
+	if err := y.rateLimiter.Wait(context.Background()); err != nil {
+		return nil, fmt.Errorf("rate limiter error: %w", err)
+	}
+
 	endTime := time.Now().Unix()
 	startTime := time.Now().AddDate(0, 0, -days).Unix()
 
@@ -161,7 +190,10 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]*m
 		SetHeader("User-Agent", "Mozilla/5.0 (compatible; StockAutomation/1.0)").
 		Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch historical data: %w", err)
+		if IsRetryableError(err) {
+			return nil, fmt.Errorf("temporary error fetching historical data for %s: %w", stockCode, err)
+		}
+		return nil, fmt.Errorf("failed to fetch historical data for %s: %w", stockCode, err)
 	}
 
 	var response YahooFinanceResponse
@@ -225,6 +257,11 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]*m
 
 // GetIntradayData retrieves intraday stock price data.
 func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) ([]*models.StockPrice, error) {
+	// Apply rate limiting
+	if err := y.rateLimiter.Wait(context.Background()); err != nil {
+		return nil, fmt.Errorf("rate limiter error: %w", err)
+	}
+
 	url := fmt.Sprintf("%s/v8/finance/chart/%s.T", y.baseURL, stockCode)
 
 	resp, err := y.client.R().
@@ -235,7 +272,10 @@ func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) 
 		SetHeader("User-Agent", "Mozilla/5.0 (compatible; StockAutomation/1.0)").
 		Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch intraday data: %w", err)
+		if IsRetryableError(err) {
+			return nil, fmt.Errorf("temporary error fetching intraday data for %s: %w", stockCode, err)
+		}
+		return nil, fmt.Errorf("failed to fetch intraday data for %s: %w", stockCode, err)
 	}
 
 	var response YahooFinanceResponse

@@ -85,7 +85,16 @@ func (c *Container) initializeInfrastructure() error {
 	c.portfolioRepository = repository.NewPortfolioRepository(connMgr.GetExecutor())
 
 	// External clients
-	c.stockDataClient = client.NewYahooFinanceClient()
+	yahooConfig := client.YahooFinanceConfig{
+		BaseURL:       c.config.Yahoo.BaseURL,
+		Timeout:       c.config.Yahoo.Timeout,
+		RetryCount:    c.config.Yahoo.RetryCount,
+		RetryWaitTime: c.config.Yahoo.RetryWaitTime,
+		RetryMaxWait:  c.config.Yahoo.RetryMaxWait,
+		UserAgent:     c.config.Yahoo.UserAgent,
+		RateLimitRPS:  c.config.Yahoo.RateLimitRPS,
+	}
+	c.stockDataClient = client.NewYahooFinanceClientWithConfig(yahooConfig)
 
 	// Notification service
 	c.notificationService = notification.NewSlackNotificationService(
