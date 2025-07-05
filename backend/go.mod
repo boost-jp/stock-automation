@@ -3,6 +3,10 @@ module github.com/boost-jp/stock-automation
 go 1.24.4
 
 require (
+	github.com/aarondl/null/v8 v8.1.3
+	github.com/aarondl/sqlboiler/v4 v4.19.5
+	github.com/aarondl/strmangle v0.0.9
+	github.com/friendsofgo/errors v0.9.2
 	github.com/go-co-op/gocron v1.18.0
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/sirupsen/logrus v1.9.0
