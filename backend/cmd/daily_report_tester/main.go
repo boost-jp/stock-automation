@@ -26,6 +26,7 @@ func main() {
 
 	// 1. ポートフォリオ統計取得テスト
 	log.Println("\n📈 ポートフォリオ統計取得テスト")
+
 	statistics, err := reporter.GetPortfolioStatistics()
 	if err != nil {
 		log.Printf("❌ 統計取得エラー: %v", err)
@@ -38,6 +39,7 @@ func main() {
 
 	// 2. 包括的レポート生成テスト
 	log.Println("\n📋 包括的レポート生成テスト")
+
 	report, err := reporter.GenerateComprehensiveDailyReport()
 	if err != nil {
 		log.Printf("❌ レポート生成エラー: %v", err)
@@ -50,6 +52,7 @@ func main() {
 
 	// 3. 基本レポート生成・送信テスト（実際には送信しない）
 	log.Println("\n📤 基本レポート生成・送信テスト")
+
 	err = reporter.GenerateAndSendDailyReport()
 	if err != nil {
 		log.Printf("❌ 基本レポート送信エラー: %v", err)

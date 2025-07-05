@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// 株価データ
+// 株価データ.
 type StockPrice struct {
 	ID        uint      `gorm:"primaryKey"`
 	Code      string    `gorm:"index;not null;size:10"`
@@ -19,7 +19,7 @@ type StockPrice struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 
-// テクニカル指標
+// テクニカル指標.
 type TechnicalIndicator struct {
 	ID        uint      `gorm:"primaryKey"`
 	Code      string    `gorm:"index;not null;size:10"`
@@ -34,7 +34,7 @@ type TechnicalIndicator struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 
-// ポートフォリオ
+// ポートフォリオ.
 type Portfolio struct {
 	ID            uint      `gorm:"primaryKey"`
 	Code          string    `gorm:"index;not null;size:10"`
@@ -46,7 +46,7 @@ type Portfolio struct {
 	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
 }
 
-// 監視銘柄
+// 監視銘柄.
 type WatchList struct {
 	ID              uint      `gorm:"primaryKey"`
 	Code            string    `gorm:"uniqueIndex;not null;size:10"`
@@ -58,17 +58,20 @@ type WatchList struct {
 	UpdatedAt       time.Time `gorm:"autoUpdateTime"`
 }
 
-// StockPrice validation methods
+// StockPrice validation methods.
 func (s *StockPrice) IsValid() bool {
 	if s.Code == "" || s.Name == "" {
 		return false
 	}
+
 	if s.Price < 0 || s.High < 0 || s.Low < 0 || s.Open < 0 || s.Close < 0 {
 		return false
 	}
+
 	if s.Volume < 0 {
 		return false
 	}
+
 	return true
 }
 
@@ -80,17 +83,20 @@ func (s *StockPrice) CalculateReturnRate(portfolio Portfolio) float64 {
 	if portfolio.PurchasePrice == 0 {
 		return 0
 	}
+
 	return (s.Price - portfolio.PurchasePrice) / portfolio.PurchasePrice * 100
 }
 
-// TechnicalIndicator validation methods
+// TechnicalIndicator validation methods.
 func (t *TechnicalIndicator) IsValid() bool {
 	if t.Code == "" {
 		return false
 	}
+
 	if t.RSI < 0 || t.RSI > 100 {
 		return false
 	}
+
 	return true
 }
 
@@ -117,20 +123,24 @@ func (t *TechnicalIndicator) GetSignalStrength() string {
 	} else if sellSignals > buySignals {
 		return "Strong Sell"
 	}
+
 	return "Neutral"
 }
 
-// Portfolio validation methods
+// Portfolio validation methods.
 func (p *Portfolio) IsValid() bool {
 	if p.Code == "" || p.Name == "" {
 		return false
 	}
+
 	if p.Shares <= 0 {
 		return false
 	}
+
 	if p.PurchasePrice <= 0 {
 		return false
 	}
+
 	return true
 }
 
@@ -142,13 +152,15 @@ func (p *Portfolio) GetPurchaseValue() float64 {
 	return float64(p.Shares) * p.PurchasePrice
 }
 
-// WatchList validation methods
+// WatchList validation methods.
 func (w *WatchList) IsValid() bool {
 	if w.Code == "" || w.Name == "" {
 		return false
 	}
+
 	if w.TargetBuyPrice > 0 && w.TargetSellPrice > 0 && w.TargetBuyPrice >= w.TargetSellPrice {
 		return false
 	}
+
 	return true
 }

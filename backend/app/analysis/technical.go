@@ -6,7 +6,7 @@ import (
 	"github.com/boost-jp/stock-automation/app/models"
 )
 
-// MovingAverage calculates simple moving average
+// MovingAverage calculates simple moving average.
 func MovingAverage(prices []models.StockPrice, period int) float64 {
 	if len(prices) < period {
 		return 0
@@ -20,7 +20,7 @@ func MovingAverage(prices []models.StockPrice, period int) float64 {
 	return sum / float64(period)
 }
 
-// RSI calculates Relative Strength Index
+// RSI calculates Relative Strength Index.
 func RSI(prices []models.StockPrice, period int) float64 {
 	if len(prices) <= period {
 		return 50.0 // 中立値
@@ -52,7 +52,7 @@ func RSI(prices []models.StockPrice, period int) float64 {
 	return rsi
 }
 
-// MACD calculates Moving Average Convergence Divergence
+// MACD calculates Moving Average Convergence Divergence.
 func MACD(prices []models.StockPrice, fastPeriod, slowPeriod, signalPeriod int) (macd, signal, histogram float64) {
 	if len(prices) < slowPeriod {
 		return 0, 0, 0
@@ -90,7 +90,7 @@ func MACD(prices []models.StockPrice, fastPeriod, slowPeriod, signalPeriod int) 
 	return macd, signal, histogram
 }
 
-// CalculateAllIndicators calculates all technical indicators for a stock
+// CalculateAllIndicators calculates all technical indicators for a stock.
 func CalculateAllIndicators(prices []models.StockPrice) *models.TechnicalIndicator {
 	if len(prices) == 0 {
 		return nil
@@ -112,7 +112,7 @@ func CalculateAllIndicators(prices []models.StockPrice) *models.TechnicalIndicat
 	return indicator
 }
 
-// TradingSignal represents buy/sell/hold signal
+// TradingSignal represents buy/sell/hold signal.
 type TradingSignal struct {
 	Action     string  // "buy", "sell", "hold"
 	Confidence float64 // 0.0 to 1.0
@@ -120,7 +120,7 @@ type TradingSignal struct {
 	Score      float64
 }
 
-// GenerateTradingSignal generates trading signal based on technical indicators
+// GenerateTradingSignal generates trading signal based on technical indicators.
 func GenerateTradingSignal(indicator *models.TechnicalIndicator, currentPrice float64) *TradingSignal {
 	score := 0.0
 	reasons := []string{}
@@ -128,41 +128,50 @@ func GenerateTradingSignal(indicator *models.TechnicalIndicator, currentPrice fl
 	// RSI based signals
 	if indicator.RSI < 30 {
 		score += 2.0
+
 		reasons = append(reasons, "RSI oversold")
 	} else if indicator.RSI > 70 {
 		score -= 2.0
+
 		reasons = append(reasons, "RSI overbought")
 	}
 
 	// Moving Average signals
 	if indicator.MA5 > indicator.MA25 && indicator.MA25 > indicator.MA75 {
 		score += 1.5
+
 		reasons = append(reasons, "Bullish MA alignment")
 	} else if indicator.MA5 < indicator.MA25 && indicator.MA25 < indicator.MA75 {
 		score -= 1.5
+
 		reasons = append(reasons, "Bearish MA alignment")
 	}
 
 	// MACD signals
 	if indicator.MACD > indicator.Signal && indicator.Histogram > 0 {
 		score += 1.0
+
 		reasons = append(reasons, "MACD bullish")
 	} else if indicator.MACD < indicator.Signal && indicator.Histogram < 0 {
 		score -= 1.0
+
 		reasons = append(reasons, "MACD bearish")
 	}
 
 	// Price vs Moving Average
 	if currentPrice > indicator.MA5 && currentPrice > indicator.MA25 {
 		score += 0.5
+
 		reasons = append(reasons, "Price above key MAs")
 	} else if currentPrice < indicator.MA5 && currentPrice < indicator.MA25 {
 		score -= 0.5
+
 		reasons = append(reasons, "Price below key MAs")
 	}
 
 	// Determine action and confidence
 	var action string
+
 	confidence := math.Min(math.Abs(score)/5.0, 1.0) // Normalize to 0-1
 
 	if score > 1.0 {

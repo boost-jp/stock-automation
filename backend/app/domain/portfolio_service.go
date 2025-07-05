@@ -1,13 +1,21 @@
-package analysis
+package domain
 
 import (
 	"fmt"
-	"strconv"
+	"math"
 	"strings"
 	"time"
 
-	"github.com/boost-jp/stock-automation/app/models"
+	"github.com/boost-jp/stock-automation/app/domain/models"
 )
+
+// PortfolioService handles portfolio business logic.
+type PortfolioService struct{}
+
+// NewPortfolioService creates a new portfolio service.
+func NewPortfolioService() *PortfolioService {
+	return &PortfolioService{}
+}
 
 // PortfolioSummary represents portfolio performance summary.
 type PortfolioSummary struct {
@@ -33,30 +41,36 @@ type HoldingSummary struct {
 	LastUpdated   time.Time
 }
 
-// CalculatePortfolioSummary calculates portfolio performance.
-func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[string]float64) *PortfolioSummary {
+// CalculatePortfolioSummary calculates portfolio performance using domain model methods.
+func (s *PortfolioService) CalculatePortfolioSummary(
+	portfolios []*models.Portfolio,
+	currentPrices map[string]float64,
+) *PortfolioSummary {
 	summary := &PortfolioSummary{
-		Holdings:  make([]HoldingSummary, 0),
-		UpdatedAt: time.Now(),
+		TotalValue: 0,
+		TotalCost:  0,
+		Holdings:   make([]HoldingSummary, 0),
+		UpdatedAt:  time.Now(),
 	}
 
-	for _, holding := range portfolio {
+	for _, holding := range portfolios {
 		currentPrice, exists := currentPrices[holding.Code]
 		if !exists {
 			continue // Skip if no current price available
 		}
 
-		currentValue := float64(holding.Shares) * currentPrice
-		purchaseCost := float64(holding.Shares) * holding.PurchasePrice
-		gain := currentValue - purchaseCost
-		gainPercent := (gain / purchaseCost) * 100
+		// Use domain model methods for calculations
+		currentValue := holding.CalculateCurrentValue(currentPrice)
+		purchaseCost := holding.CalculatePurchaseCost()
+		gain := holding.CalculateGain(currentPrice)
+		gainPercent := holding.CalculateGainPercent(currentPrice)
 
 		holdingSummary := HoldingSummary{
 			Code:          holding.Code,
 			Name:          holding.Name,
 			Shares:        holding.Shares,
 			CurrentPrice:  currentPrice,
-			PurchasePrice: holding.PurchasePrice,
+			PurchasePrice: holding.GetPurchasePrice(),
 			CurrentValue:  currentValue,
 			PurchaseCost:  purchaseCost,
 			Gain:          gain,
@@ -78,7 +92,7 @@ func CalculatePortfolioSummary(portfolio []models.Portfolio, currentPrices map[s
 }
 
 // GeneratePortfolioReport generates a formatted report.
-func GeneratePortfolioReport(summary *PortfolioSummary) string {
+func (s *PortfolioService) GeneratePortfolioReport(summary *PortfolioSummary) string {
 	if len(summary.Holdings) == 0 {
 		return "ポートフォリオにデータがありません"
 	}
@@ -88,15 +102,18 @@ func GeneratePortfolioReport(summary *PortfolioSummary) string {
 	// 総資産状況
 	report += "💰 総資産状況\n"
 	report += "━━━━━━━━━━━━━━━━━━━━\n"
-	report += sprintf("現在価値: ¥%.0f\n", summary.TotalValue)
-	report += sprintf("投資元本: ¥%.0f\n", summary.TotalCost)
+	report += fmt.Sprintf("現在価値: ¥%s\n", formatCurrency(summary.TotalValue))
+	report += fmt.Sprintf("投資元本: ¥%s\n", formatCurrency(summary.TotalCost))
 
 	gainIcon := "📈"
 	if summary.TotalGain < 0 {
 		gainIcon = "📉"
 	}
 
-	report += sprintf("損益: %s ¥%.0f (%.2f%%)\n\n", gainIcon, summary.TotalGain, summary.TotalGainPercent)
+	report += fmt.Sprintf("損益: %s ¥%s (%.2f%%)\n\n",
+		gainIcon,
+		formatCurrency(summary.TotalGain),
+		summary.TotalGainPercent)
 
 	// 個別銘柄
 	report += "📋 個別銘柄\n"
@@ -108,42 +125,22 @@ func GeneratePortfolioReport(summary *PortfolioSummary) string {
 			icon = "📉"
 		}
 
-		report += sprintf("%s %s (%s)\n", icon, holding.Name, holding.Code)
-		report += sprintf("  保有数: %d株 @ ¥%.0f\n", holding.Shares, holding.PurchasePrice)
-		report += sprintf("  現在価格: ¥%.0f\n", holding.CurrentPrice)
-		report += sprintf("  損益: ¥%.0f (%.2f%%)\n\n", holding.Gain, holding.GainPercent)
+		report += fmt.Sprintf("%s %s (%s)\n", icon, holding.Name, holding.Code)
+		report += fmt.Sprintf("  保有数: %d株 @ ¥%s\n", holding.Shares, formatCurrency(holding.PurchasePrice))
+		report += fmt.Sprintf("  現在価格: ¥%s\n", formatCurrency(holding.CurrentPrice))
+		report += fmt.Sprintf("  損益: ¥%s (%.2f%%)\n\n",
+			formatCurrency(holding.Gain),
+			holding.GainPercent)
 	}
 
 	return report
 }
 
-// Helper function for string formatting - Japanese report formatting.
-func sprintf(format string, args ...interface{}) string {
-	switch format {
-	case "現在価値: ¥%.0f\n":
-		return "現在価値: ¥" + formatCurrency(args[0].(float64)) + "\n"
-	case "投資元本: ¥%.0f\n":
-		return "投資元本: ¥" + formatCurrency(args[0].(float64)) + "\n"
-	case "損益: %s ¥%.0f (%.2f%%)\n\n":
-		return "損益: " + args[0].(string) + " ¥" + formatCurrency(args[1].(float64)) + " (" + formatPercent(args[2].(float64)) + "%)\n\n"
-	case "%s %s (%s)\n":
-		return args[0].(string) + " " + args[1].(string) + " (" + args[2].(string) + ")\n"
-	case "  保有数: %d株 @ ¥%.0f\n":
-		return "  保有数: " + formatInt(args[0].(int)) + "株 @ ¥" + formatCurrency(args[1].(float64)) + "\n"
-	case "  現在価格: ¥%.0f\n":
-		return "  現在価格: ¥" + formatCurrency(args[0].(float64)) + "\n"
-	case "  損益: ¥%.0f (%.2f%%)\n\n":
-		return "  損益: ¥" + formatCurrency(args[0].(float64)) + " (" + formatPercent(args[1].(float64)) + "%)\n\n"
-	default:
-		// Fallback to standard fmt.Sprintf for unknown formats
-		return fmt.Sprintf(format, args...)
-	}
-}
-
 // formatCurrency formats a float64 as Japanese currency with comma separators.
-func formatCurrency(f float64) string {
-	// Convert to string without decimals
-	str := fmt.Sprintf("%.0f", f)
+func formatCurrency(value float64) string {
+	// Round to 0 decimal places
+	rounded := math.Round(value)
+	str := fmt.Sprintf("%.0f", rounded)
 
 	// Handle negative numbers
 	isNegative := false
@@ -161,16 +158,6 @@ func formatCurrency(f float64) string {
 	}
 
 	return formatted
-}
-
-// formatPercent formats a float64 as percentage with 2 decimal places.
-func formatPercent(f float64) string {
-	return fmt.Sprintf("%.2f", f)
-}
-
-// formatInt formats an integer as string with comma separators.
-func formatInt(i int) string {
-	return addCommaToNumber(strconv.Itoa(i))
 }
 
 // addCommaToNumber adds comma separators to a number string.
@@ -191,4 +178,19 @@ func addCommaToNumber(s string) string {
 	}
 
 	return result.String()
+}
+
+// ValidatePortfolio validates a portfolio entry using domain model.
+func (s *PortfolioService) ValidatePortfolio(portfolio *models.Portfolio) error {
+	return portfolio.Validate()
+}
+
+// CalculateHoldingValue calculates the current value of a holding using domain model.
+func (s *PortfolioService) CalculateHoldingValue(portfolio *models.Portfolio, currentPrice float64) float64 {
+	return portfolio.CalculateCurrentValue(currentPrice)
+}
+
+// CalculateHoldingReturn calculates the return rate of a holding using domain model.
+func (s *PortfolioService) CalculateHoldingReturn(portfolio *models.Portfolio, currentPrice float64) float64 {
+	return portfolio.CalculateGainPercent(currentPrice)
 }

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/models"
-
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
 )
@@ -17,7 +16,7 @@ type YahooFinanceClient struct {
 	baseURL string
 }
 
-// Yahoo Finance APIレスポンス構造
+// Yahoo Finance APIレスポンス構造.
 type YahooFinanceResponse struct {
 	Chart struct {
 		Result []struct {
@@ -65,14 +64,13 @@ func NewYahooFinanceClient() *YahooFinanceClient {
 	}
 }
 
-// リアルタイム株価取得
+// リアルタイム株価取得.
 func (y *YahooFinanceClient) GetCurrentPrice(stockCode string) (*models.StockPrice, error) {
 	url := fmt.Sprintf("%s/v8/finance/chart/%s.T", y.baseURL, stockCode)
 
 	resp, err := y.client.R().
 		SetHeader("User-Agent", "Mozilla/5.0 (compatible; StockAutomation/1.0)").
 		Get(url)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch data: %w", err)
 	}
@@ -108,10 +106,11 @@ func (y *YahooFinanceClient) GetCurrentPrice(stockCode string) (*models.StockPri
 		"code":  stockCode,
 		"price": stockPrice.Price,
 	}).Debug("Yahoo Finance current price fetched")
+
 	return stockPrice, nil
 }
 
-// 履歴データ取得
+// 履歴データ取得.
 func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]models.StockPrice, error) {
 	endTime := time.Now().Unix()
 	startTime := time.Now().AddDate(0, 0, -days).Unix()
@@ -126,7 +125,6 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 		}).
 		SetHeader("User-Agent", "Mozilla/5.0 (compatible; StockAutomation/1.0)").
 		Get(url)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch historical data: %w", err)
 	}
@@ -148,6 +146,7 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 	}
 
 	timestamps := result.Timestamp
+
 	if len(result.Indicators.Quote) == 0 {
 		return nil, fmt.Errorf("no quote indicators found for: %s", stockCode)
 	}
@@ -155,6 +154,7 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 	quotes := result.Indicators.Quote[0]
 
 	var prices []models.StockPrice
+
 	for i, ts := range timestamps {
 		// Skip invalid or missing data points
 		if i >= len(quotes.Close) || i >= len(quotes.Open) || i >= len(quotes.High) ||
@@ -185,10 +185,11 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]mo
 		"code":    stockCode,
 		"records": len(prices),
 	}).Debug("Yahoo Finance historical data fetched")
+
 	return prices, nil
 }
 
-// 分足データ取得
+// 分足データ取得.
 func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) ([]models.StockPrice, error) {
 	url := fmt.Sprintf("%s/v8/finance/chart/%s.T", y.baseURL, stockCode)
 
@@ -199,7 +200,6 @@ func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) 
 		}).
 		SetHeader("User-Agent", "Mozilla/5.0 (compatible; StockAutomation/1.0)").
 		Get(url)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch intraday data: %w", err)
 	}
@@ -218,6 +218,7 @@ func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) 
 	quotes := result.Indicators.Quote[0]
 
 	var prices []models.StockPrice
+
 	for i, ts := range timestamps {
 		if i >= len(quotes.Close) || quotes.Close[i] == 0 {
 			continue

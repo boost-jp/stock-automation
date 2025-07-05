@@ -21,6 +21,7 @@ func New(message string, options ...ErrorOption) error {
 	for _, option := range options {
 		option(ce)
 	}
+
 	return ce
 }
 
@@ -46,6 +47,7 @@ func Wrap(err error, message string, options ...ErrorOption) error {
 	if err == nil {
 		return nil
 	}
+
 	wrapped := fmt.Errorf("%w: %s", err, message)
 
 	var traces []*trace
@@ -56,6 +58,7 @@ func Wrap(err error, message string, options ...ErrorOption) error {
 	} else {
 		traces = StackTrace()
 	}
+
 	ce := &customError{ //nolint:exhaustruct
 		Err:   wrapped,
 		Stack: traces,
@@ -63,6 +66,7 @@ func Wrap(err error, message string, options ...ErrorOption) error {
 	for _, option := range options {
 		option(ce)
 	}
+
 	return ce
 }
 
@@ -73,7 +77,9 @@ func WrapWithCustom(original error, err error, options ...ErrorOption) error {
 	if original == nil {
 		return nil
 	}
+
 	wrapped := fmt.Errorf("%w: %s", err, original) //nolint:errorlint
+
 	var traces []*trace
 
 	var cerr *customError
@@ -82,6 +88,7 @@ func WrapWithCustom(original error, err error, options ...ErrorOption) error {
 	} else {
 		traces = StackTrace()
 	}
+
 	ce := &customError{ //nolint:exhaustruct
 		Err:   wrapped,
 		Stack: traces,
@@ -89,6 +96,7 @@ func WrapWithCustom(original error, err error, options ...ErrorOption) error {
 	for _, option := range options {
 		option(ce)
 	}
+
 	return ce
 }
 
@@ -98,20 +106,26 @@ func shortStack(err error) []*trace {
 	if err == nil {
 		return []*trace{}
 	}
+
 	var ce *customError
 
 	if errors.As(err, &ce) {
 		var stacks []*trace
+
 		var depth int
+
 		for _, t := range ce.Stack {
 			stacks = append(stacks, t)
+
 			depth++
 			if depth >= shortStackDepth {
 				break
 			}
 		}
+
 		return stacks
 	}
+
 	return []*trace{}
 }
 
@@ -128,10 +142,12 @@ func UnWrap(err error) error {
 	if err == nil {
 		return nil
 	}
+
 	var ce *customError
 	if errors.As(err, &ce) {
 		return ce.Err
 	}
+
 	return err
 }
 
@@ -139,10 +155,12 @@ func CustomErrorCode(err error) string {
 	if err == nil {
 		return ""
 	}
+
 	var ce *customError
 	if errors.As(err, &ce) {
 		return ce.ErrCode
 	}
+
 	return ""
 }
 
@@ -163,10 +181,12 @@ func ErrDisplayMessage(err error) string {
 	if err == nil {
 		return ""
 	}
+
 	var ce *customError
 	if errors.As(err, &ce) {
 		return ce.ErrDisplayMessage
 	}
+
 	return ""
 }
 

@@ -10,11 +10,10 @@ import (
 	"github.com/boost-jp/stock-automation/app/api"
 	"github.com/boost-jp/stock-automation/app/database"
 	"github.com/boost-jp/stock-automation/app/models"
-
 	"gorm.io/gorm"
 )
 
-// BulkDataCollector handles bulk historical data collection for technical analysis
+// BulkDataCollector handles bulk historical data collection for technical analysis.
 type BulkDataCollector struct {
 	db          *gorm.DB
 	yahooClient *api.YahooFinanceClient
@@ -22,7 +21,7 @@ type BulkDataCollector struct {
 	maxWorkers  int
 }
 
-// NewBulkDataCollector creates a new bulk data collector
+// NewBulkDataCollector creates a new bulk data collector.
 func NewBulkDataCollector(db *gorm.DB) *BulkDataCollector {
 	return &BulkDataCollector{
 		db:          db,
@@ -32,7 +31,7 @@ func NewBulkDataCollector(db *gorm.DB) *BulkDataCollector {
 	}
 }
 
-// CollectHistoricalData collects historical data for multiple stocks
+// CollectHistoricalData collects historical data for multiple stocks.
 func (bdc *BulkDataCollector) CollectHistoricalData(ctx context.Context, stockCodes []string, days int) error {
 	startDate := time.Now().AddDate(0, 0, -days)
 
@@ -47,6 +46,7 @@ func (bdc *BulkDataCollector) CollectHistoricalData(ctx context.Context, stockCo
 
 		if err == nil && latestRecord.Timestamp.After(startDate) {
 			log.Printf("✅ %s: 既存データあり (最新: %s)", code, latestRecord.Timestamp.Format("2006-01-02"))
+
 			continue
 		}
 
@@ -54,6 +54,7 @@ func (bdc *BulkDataCollector) CollectHistoricalData(ctx context.Context, stockCo
 		err = bdc.collectHistoricalDataForStock(ctx, code, startDate, time.Now())
 		if err != nil {
 			log.Printf("❌ %s: データ取得エラー: %v", code, err)
+
 			continue
 		}
 
@@ -69,10 +70,11 @@ func (bdc *BulkDataCollector) CollectHistoricalData(ctx context.Context, stockCo
 	}
 
 	log.Printf("🎉 完了: 全%d銘柄のデータ一括取得が完了しました", len(stockCodes))
+
 	return nil
 }
 
-// CollectHistoricalDataParallel collects historical data for multiple stocks using parallel processing
+// CollectHistoricalDataParallel collects historical data for multiple stocks using parallel processing.
 func (bdc *BulkDataCollector) CollectHistoricalDataParallel(ctx context.Context, stockCodes []string, days int) error {
 	startDate := time.Now().AddDate(0, 0, -days)
 
@@ -108,6 +110,7 @@ func (bdc *BulkDataCollector) CollectHistoricalDataParallel(ctx context.Context,
 			if err == nil && latestRecord.Timestamp.After(startDate) {
 				log.Printf("✅ %s: 既存データあり (最新: %s)", stockCode, latestRecord.Timestamp.Format("2006-01-02"))
 				results <- nil
+
 				return
 			}
 
@@ -116,6 +119,7 @@ func (bdc *BulkDataCollector) CollectHistoricalDataParallel(ctx context.Context,
 			if err != nil {
 				log.Printf("❌ %s: データ取得エラー: %v", stockCode, err)
 				results <- err
+
 				return
 			}
 
@@ -133,6 +137,7 @@ func (bdc *BulkDataCollector) CollectHistoricalDataParallel(ctx context.Context,
 
 	// Collect results
 	var errors []error
+
 	for err := range results {
 		if err != nil {
 			errors = append(errors, err)
@@ -141,16 +146,18 @@ func (bdc *BulkDataCollector) CollectHistoricalDataParallel(ctx context.Context,
 
 	if len(errors) > 0 {
 		log.Printf("⚠️  %d件のエラーが発生しました", len(errors))
+
 		for _, err := range errors {
 			log.Printf("   - %v", err)
 		}
 	}
 
 	log.Printf("🎉 完了: 全%d銘柄のデータ並列取得が完了しました (エラー: %d件)", len(stockCodes), len(errors))
+
 	return nil
 }
 
-// collectHistoricalDataForStockWithRetry collects data with retry logic
+// collectHistoricalDataForStockWithRetry collects data with retry logic.
 func (bdc *BulkDataCollector) collectHistoricalDataForStockWithRetry(ctx context.Context, code string, startDate, endDate time.Time) error {
 	var lastErr error
 
@@ -161,6 +168,7 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStockWithRetry(ctx context
 		}
 
 		lastErr = err
+
 		if attempt < bdc.maxRetries {
 			waitTime := time.Duration(attempt) * time.Second * 2 // Exponential backoff
 			log.Printf("🔄 %s: リトライ中 (%d/%d) - %v秒後に再試行", code, attempt, bdc.maxRetries, waitTime.Seconds())
@@ -177,7 +185,7 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStockWithRetry(ctx context
 	return fmt.Errorf("最大リトライ回数(%d)に達しました: %w", bdc.maxRetries, lastErr)
 }
 
-// collectHistoricalDataForStock collects historical data for a single stock using Yahoo Finance API
+// collectHistoricalDataForStock collects historical data for a single stock using Yahoo Finance API.
 func (bdc *BulkDataCollector) collectHistoricalDataForStock(ctx context.Context, code string, startDate, endDate time.Time) error {
 	// Calculate number of days to fetch
 	days := int(endDate.Sub(startDate).Hours() / 24)
@@ -197,6 +205,7 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStock(ctx context.Context,
 
 	// Set the stock name for all records and validate
 	validPrices := make([]models.StockPrice, 0)
+
 	for i := range stockPrices {
 		stockPrices[i].Name = stockName
 		// Validate the data
@@ -213,17 +222,17 @@ func (bdc *BulkDataCollector) collectHistoricalDataForStock(ctx context.Context,
 		if err != nil {
 			return fmt.Errorf("failed to batch upsert stock prices: %w", err)
 		}
+
 		log.Printf("💾 %s: %d件のデータを保存/更新しました", code, len(validPrices))
 	}
 
 	return nil
 }
 
-// upsertStockPrices performs batch upsert operation for stock prices
+// upsertStockPrices performs batch upsert operation for stock prices.
 func (bdc *BulkDataCollector) upsertStockPrices(stockPrices []models.StockPrice) error {
 	// MySQL用のON DUPLICATE KEY UPDATE構文を使用
 	// 重複した場合（code + timestampの組み合わせ）は値を更新
-
 	batchSize := 100
 	for i := 0; i < len(stockPrices); i += batchSize {
 		end := i + batchSize
@@ -252,7 +261,7 @@ func (bdc *BulkDataCollector) upsertStockPrices(stockPrices []models.StockPrice)
 	return nil
 }
 
-// getStockName returns the stock name for a given code
+// getStockName returns the stock name for a given code.
 func (bdc *BulkDataCollector) getStockName(code string) string {
 	// Mapping of stock codes to names for major Japanese stocks
 	stockNames := map[string]string{
@@ -271,10 +280,11 @@ func (bdc *BulkDataCollector) getStockName(code string) string {
 	if name, exists := stockNames[code]; exists {
 		return name
 	}
+
 	return fmt.Sprintf("Stock_%s", code)
 }
 
-// GetStockCodesForAnalysis returns the list of stock codes to analyze
+// GetStockCodesForAnalysis returns the list of stock codes to analyze.
 func (bdc *BulkDataCollector) GetStockCodesForAnalysis() []string {
 	// These would come from a configuration file or database
 	// For now, returning some major Japanese stocks
@@ -307,6 +317,7 @@ func main() {
 
 	// Collect historical data for the past 365 days using parallel processing
 	ctx := context.Background()
+
 	err = bulkCollector.CollectHistoricalDataParallel(ctx, stockCodes, 365)
 	if err != nil {
 		log.Fatal("データ一括取得エラー:", err)

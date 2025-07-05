@@ -6,7 +6,6 @@ import (
 
 	"github.com/boost-jp/stock-automation/app/database"
 	"github.com/boost-jp/stock-automation/app/models"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,7 +24,7 @@ func NewDataCollector(db *database.DB) *DataCollector {
 	}
 }
 
-// 監視銘柄リストの更新
+// 監視銘柄リストの更新.
 func (dc *DataCollector) UpdateWatchList() error {
 	watchList, err := dc.db.GetActiveWatchList()
 	if err != nil {
@@ -37,10 +36,11 @@ func (dc *DataCollector) UpdateWatchList() error {
 	dc.mutex.Unlock()
 
 	logrus.Infof("Updated watch list: %d stocks", len(watchList))
+
 	return nil
 }
 
-// ポートフォリオの更新
+// ポートフォリオの更新.
 func (dc *DataCollector) UpdatePortfolio() error {
 	portfolio, err := dc.db.GetPortfolio()
 	if err != nil {
@@ -52,10 +52,11 @@ func (dc *DataCollector) UpdatePortfolio() error {
 	dc.mutex.Unlock()
 
 	logrus.Infof("Updated portfolio: %d stocks", len(portfolio))
+
 	return nil
 }
 
-// 全銘柄の価格更新
+// 全銘柄の価格更新.
 func (dc *DataCollector) UpdateAllPrices() error {
 	dc.mutex.RLock()
 	allStocks := make(map[string]string)
@@ -73,15 +74,18 @@ func (dc *DataCollector) UpdateAllPrices() error {
 
 	if len(allStocks) == 0 {
 		logrus.Debug("No stocks to update")
+
 		return nil
 	}
 
 	// 並行処理で価格取得
 	var wg sync.WaitGroup
+
 	semaphore := make(chan struct{}, 5)
 
 	for code, name := range allStocks {
 		wg.Add(1)
+
 		go func(stockCode, stockName string) {
 			defer wg.Done()
 
@@ -96,10 +100,11 @@ func (dc *DataCollector) UpdateAllPrices() error {
 
 	wg.Wait()
 	logrus.Infof("Updated prices for %d stocks", len(allStocks))
+
 	return nil
 }
 
-// 単一銘柄の価格更新
+// 単一銘柄の価格更新.
 func (dc *DataCollector) updateSinglePrice(stockCode, stockName string) error {
 	price, err := dc.yahooClient.GetCurrentPrice(stockCode)
 	if err != nil {
@@ -117,10 +122,11 @@ func (dc *DataCollector) updateSinglePrice(stockCode, stockName string) error {
 		"name":  stockName,
 		"price": price.Price,
 	}).Debug("Stock price updated")
+
 	return nil
 }
 
-// 履歴データの一括取得
+// 履歴データの一括取得.
 func (dc *DataCollector) CollectHistoricalData(stockCode string, days int) error {
 	prices, err := dc.yahooClient.GetHistoricalData(stockCode, days)
 	if err != nil {
@@ -128,17 +134,21 @@ func (dc *DataCollector) CollectHistoricalData(stockCode string, days int) error
 	}
 
 	stockName := ""
+
 	dc.mutex.RLock()
 	for _, stock := range dc.watchList {
 		if stock.Code == stockCode {
 			stockName = stock.Name
+
 			break
 		}
 	}
+
 	if stockName == "" {
 		for _, stock := range dc.portfolio {
 			if stock.Code == stockCode {
 				stockName = stock.Name
+
 				break
 			}
 		}
@@ -154,10 +164,11 @@ func (dc *DataCollector) CollectHistoricalData(stockCode string, days int) error
 	}
 
 	logrus.Infof("Collected %d historical records for %s", len(prices), stockCode)
+
 	return nil
 }
 
-// 市場時間チェック
+// 市場時間チェック.
 func (dc *DataCollector) IsMarketOpen() bool {
 	now := time.Now()
 
@@ -167,10 +178,11 @@ func (dc *DataCollector) IsMarketOpen() bool {
 	}
 
 	hour := now.Hour()
+
 	return hour >= 9 && hour < 15
 }
 
-// データ品質チェック
+// データ品質チェック.
 func (dc *DataCollector) ValidateData(price *models.StockPrice) bool {
 	if price.Price <= 0 || price.Volume < 0 {
 		return false
