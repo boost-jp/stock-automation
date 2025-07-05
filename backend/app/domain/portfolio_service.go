@@ -195,7 +195,7 @@ func (s *PortfolioService) ValidatePortfolio(portfolio *models.Portfolio) error 
 	if portfolio.Shares <= 0 {
 		return fmt.Errorf("保有株数は1以上である必要があります")
 	}
-	
+
 	purchasePrice := s.decimalToFloat(portfolio.PurchasePrice)
 	if purchasePrice <= 0 {
 		return fmt.Errorf("購入価格は0より大きい必要があります")
@@ -214,7 +214,7 @@ func (s *PortfolioService) CalculateHoldingReturn(portfolio *models.Portfolio, c
 	if purchasePrice == 0 {
 		return 0
 	}
-	
+
 	gain := currentPrice - purchasePrice
 	return (gain / purchasePrice) * 100
 }

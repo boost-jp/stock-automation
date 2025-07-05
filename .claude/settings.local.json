@@ -65,7 +65,8 @@
       "Bash(export GOPATH=/tmp/gopath)",
       "Bash(export:*)",
       "Bash(go test:*)",
-      "Bash(go:*)"
+      "Bash(go:*)",
+      "Bash(gh pr status:*)"
     ],
     "deny": []
   }
