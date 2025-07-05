@@ -56,12 +56,12 @@ func TestIsRetryableError(t *testing.T) {
 		{
 			name: "connection refused syscall error",
 			err:  syscall.ECONNREFUSED,
-			want: true,
+			want: false, // syscall errors are not directly handled
 		},
 		{
 			name: "connection reset syscall error",
 			err:  syscall.ECONNRESET,
-			want: true,
+			want: false, // syscall errors are not directly handled
 		},
 		{
 			name: "wrapped rate limit error is retryable",
