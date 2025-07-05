@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/boost-jp/stock-automation/internal/database"
-	"github.com/boost-jp/stock-automation/internal/models"
 	"log"
 	"time"
+
+	"github.com/boost-jp/stock-automation/internal/database"
+	"github.com/boost-jp/stock-automation/internal/models"
 )
 
 func main() {

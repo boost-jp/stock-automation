@@ -1,9 +1,10 @@
 package analysis
 
 import (
-	"github.com/boost-jp/stock-automation/internal/models"
 	"testing"
 	"time"
+
+	"github.com/boost-jp/stock-automation/internal/models"
 
 	"github.com/stretchr/testify/assert"
 )

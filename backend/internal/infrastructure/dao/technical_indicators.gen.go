@@ -15,15 +15,14 @@ import (
 
 	"github.com/aarondl/null/v8"
 	"github.com/aarondl/sqlboiler/v4/boil"
-	"github.com/aarondl/sqlboiler/v4/drivers"
 	"github.com/aarondl/sqlboiler/v4/queries"
 	"github.com/aarondl/sqlboiler/v4/queries/qm"
 	"github.com/aarondl/sqlboiler/v4/queries/qmhelper"
 	"github.com/aarondl/sqlboiler/v4/types"
 	"github.com/aarondl/strmangle"
-	models "github.com/boost-jp/stock-automation/internal/domain"
 	cerrors "github.com/boost-jp/stock-automation/internal/errors"
 	errors "github.com/boost-jp/stock-automation/internal/errors/boilerrors"
+	"github.com/go-sql-driver/mysql"
 )
 
 // InsertAll inserts all rows with the specified column values, using an executor.

@@ -4,26 +4,10 @@
 package models
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"reflect"
-	"strconv"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/aarondl/null/v8"
-	"github.com/aarondl/sqlboiler/v4/boil"
-	"github.com/aarondl/sqlboiler/v4/drivers"
-	"github.com/aarondl/sqlboiler/v4/queries"
-	"github.com/aarondl/sqlboiler/v4/queries/qm"
-	"github.com/aarondl/sqlboiler/v4/queries/qmhelper"
 	"github.com/aarondl/sqlboiler/v4/types"
-	"github.com/aarondl/strmangle"
-	models "github.com/boost-jp/stock-automation/internal/domain"
-	cerrors "github.com/boost-jp/stock-automation/internal/errors"
-	errors "github.com/boost-jp/stock-automation/internal/errors/boilerrors"
 )
 
 //go:generate go run  ../../../cmd/generator/repoinit --fields=ID,Code,Date,OpenPrice,HighPrice,LowPrice,ClosePrice,Volume,CreatedAt,UpdatedAt, StockPrice

@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/boost-jp/stock-automation/internal/api"
-	"github.com/boost-jp/stock-automation/internal/database"
-	"github.com/boost-jp/stock-automation/internal/models"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/boost-jp/stock-automation/internal/api"
+	"github.com/boost-jp/stock-automation/internal/database"
+	"github.com/boost-jp/stock-automation/internal/models"
 
 	"gorm.io/gorm"
 )

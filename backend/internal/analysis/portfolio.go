@@ -2,10 +2,11 @@ package analysis
 
 import (
 	"fmt"
-	"github.com/boost-jp/stock-automation/internal/models"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/boost-jp/stock-automation/internal/models"
 )
 
 // PortfolioSummary represents portfolio performance summary

@@ -52,7 +52,7 @@ lint: ## Run linter
 fmt: ## Format code
 	@echo "Formatting code..."
 	@go fmt ./...
-	@goimports -w .
+	@go tool goimports -w .
 
 vet: ## Run go vet
 	@echo "Running go vet..."

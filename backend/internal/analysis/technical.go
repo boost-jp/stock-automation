@@ -1,8 +1,9 @@
 package analysis
 
 import (
-	"github.com/boost-jp/stock-automation/internal/models"
 	"math"
+
+	"github.com/boost-jp/stock-automation/internal/models"
 )
 
 // MovingAverage calculates simple moving average
