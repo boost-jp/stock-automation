@@ -1,6 +1,6 @@
 module tools
 
-go 1.24
+go 1.24.4
 
 tool (
 	github.com/aarondl/sqlboiler/v4
