@@ -68,7 +68,8 @@
       "Bash(go:*)",
       "Bash(gh pr status:*)",
       "Bash(cp:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }

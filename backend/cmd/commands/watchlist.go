@@ -12,7 +12,7 @@ import (
 	"github.com/boost-jp/stock-automation/app/domain/models"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
 	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
-	"github.com/boost-jp/stock-automation/internal/ulid"
+	"github.com/boost-jp/stock-automation/app/utils"
 	"github.com/ericlagergren/decimal"
 )
 
@@ -104,7 +104,7 @@ func listWatchList(ctx context.Context, repo repository.StockRepository) {
 
 func addToWatchList(ctx context.Context, repo repository.StockRepository, code, name string, buyPrice, sellPrice float64) {
 	// Generate new ULID
-	id := ulid.NewULID()
+	id := utils.NewULID()
 
 	watchItem := &models.WatchList{
 		ID:       id,
@@ -218,4 +218,3 @@ func floatToNullDecimal(value float64) types.NullDecimal {
 	d.SetFloat64(value)
 	return types.NullDecimal{Big: d}
 }
-

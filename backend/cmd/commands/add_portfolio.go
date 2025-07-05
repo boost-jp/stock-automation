@@ -14,7 +14,7 @@ import (
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/dao"
 	"github.com/boost-jp/stock-automation/app/infrastructure/database"
-	"github.com/boost-jp/stock-automation/internal/ulid"
+	"github.com/boost-jp/stock-automation/app/utils"
 )
 
 // RunAddSamplePortfolio runs the add sample portfolio command.
@@ -44,7 +44,7 @@ func RunAddSamplePortfolio(connMgr database.ConnectionManager, args []string) {
 	// サンプルポートフォリオデータ
 	samplePortfolio := []dao.Portfolio{
 		{
-			ID:            ulid.NewULID(),
+			ID:            utils.NewULID(),
 			Code:          "7203",
 			Name:          "トヨタ自動車",
 			Shares:        100,
@@ -52,7 +52,7 @@ func RunAddSamplePortfolio(connMgr database.ConnectionManager, args []string) {
 			PurchaseDate:  time.Now().AddDate(0, -2, 0), // 2ヶ月前
 		},
 		{
-			ID:            ulid.NewULID(),
+			ID:            utils.NewULID(),
 			Code:          "6758",
 			Name:          "ソニーグループ",
 			Shares:        50,
@@ -60,7 +60,7 @@ func RunAddSamplePortfolio(connMgr database.ConnectionManager, args []string) {
 			PurchaseDate:  time.Now().AddDate(0, -1, -15), // 1ヶ月15日前
 		},
 		{
-			ID:            ulid.NewULID(),
+			ID:            utils.NewULID(),
 			Code:          "9984",
 			Name:          "ソフトバンクグループ",
 			Shares:        80,
@@ -102,4 +102,3 @@ func RunAddSamplePortfolio(connMgr database.ConnectionManager, args []string) {
 	log.Println("\n🎉 サンプルポートフォリオデータ追加完了")
 	log.Println("💡 daily-report コマンドを実行して詳細レポートを確認してください")
 }
-

@@ -96,4 +96,3 @@ func RunTestYahooAPI(args []string) {
 	log.Println()
 	log.Println("🎉 Yahoo Finance API統合テスト完了！")
 }
-

@@ -179,4 +179,3 @@ func runServer(connMgr database.ConnectionManager, args []string) {
 		logrus.Info("Application stopped")
 	}
 }
-

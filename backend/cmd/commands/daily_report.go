@@ -123,4 +123,3 @@ func (d *dummyNotifier) SendDailyReport(totalValue, totalGain float64, gainPerce
 		totalValue, totalGain, gainPercent)
 	return nil
 }
-

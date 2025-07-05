@@ -270,4 +270,3 @@ func (bdc *BulkDataCollector) GetStockCodesForAnalysis() []string {
 		"6501", // Hitachi
 	}
 }
-
