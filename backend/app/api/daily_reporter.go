@@ -8,7 +8,7 @@ import (
 	"github.com/boost-jp/stock-automation/app/analysis"
 	"github.com/boost-jp/stock-automation/app/infrastructure/client"
 	"github.com/boost-jp/stock-automation/app/infrastructure/notification"
-	"github.com/boost-jp/stock-automation/app/repository"
+	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
 	"github.com/sirupsen/logrus"
 )
 
