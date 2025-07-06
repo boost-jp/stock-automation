@@ -100,6 +100,11 @@ func (uc *TechnicalAnalysisUseCase) GetTradingSignals(ctx context.Context, stock
 		return nil, fmt.Errorf("failed to get technical indicator: %w", err)
 	}
 
+	if indicator == nil {
+		// No indicators available
+		return []string{}, nil
+	}
+
 	var signals []string
 
 	// RSI signals

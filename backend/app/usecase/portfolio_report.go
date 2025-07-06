@@ -58,6 +58,10 @@ func (uc *PortfolioReportUseCase) GenerateAndSendDailyReport(ctx context.Context
 			logrus.Warnf("Failed to get price for %s: %v", holding.Code, err)
 			continue
 		}
+		if price == nil {
+			logrus.Warnf("No price data available for %s", holding.Code)
+			continue
+		}
 		currentPrices[holding.Code] = client.DecimalToFloat(price.ClosePrice)
 	}
 
@@ -127,6 +131,12 @@ func (uc *PortfolioReportUseCase) GenerateComprehensiveDailyReport(ctx context.C
 			logrus.Warnf("Failed to get price for %s: %v", holding.Code, err)
 			continue
 		}
+		if price == nil {
+			errorMsg := fmt.Sprintf("%s (%s): 価格データなし", holding.Name, holding.Code)
+			priceErrors = append(priceErrors, errorMsg)
+			logrus.Warnf("No price data available for %s", holding.Code)
+			continue
+		}
 		currentPrices[holding.Code] = client.DecimalToFloat(price.ClosePrice)
 	}
 
@@ -182,6 +192,10 @@ func (uc *PortfolioReportUseCase) GetPortfolioStatistics(ctx context.Context) (*
 		price, err := uc.stockRepo.GetLatestPrice(ctx, holding.Code)
 		if err != nil {
 			logrus.Warnf("Failed to get price for %s: %v", holding.Code, err)
+			continue
+		}
+		if price == nil {
+			logrus.Warnf("No price data available for %s", holding.Code)
 			continue
 		}
 		currentPrices[holding.Code] = client.DecimalToFloat(price.ClosePrice)

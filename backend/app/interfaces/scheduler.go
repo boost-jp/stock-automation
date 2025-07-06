@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/boost-jp/stock-automation/app/infrastructure/alert"
 	"github.com/boost-jp/stock-automation/app/usecase"
 	"github.com/go-co-op/gocron"
 	"github.com/sirupsen/logrus"
@@ -11,9 +12,10 @@ import (
 
 // DataScheduler manages scheduled tasks for the application
 type DataScheduler struct {
-	collectorUseCase *usecase.CollectDataUseCase
-	reporterUseCase  *usecase.PortfolioReportUseCase
-	scheduler        *gocron.Scheduler
+	collectorUseCase   *usecase.CollectDataUseCase
+	reporterUseCase    *usecase.PortfolioReportUseCase
+	scheduler          *gocron.Scheduler
+	recoveryMiddleware *alert.RecoveryMiddleware
 }
 
 // NewDataScheduler creates a new data scheduler
@@ -30,42 +32,59 @@ func NewDataScheduler(
 	}
 }
 
+// SetRecoveryMiddleware sets the recovery middleware for the scheduler
+func (ds *DataScheduler) SetRecoveryMiddleware(middleware *alert.RecoveryMiddleware) {
+	ds.recoveryMiddleware = middleware
+}
+
+// executeWithRecovery executes a function with panic recovery if middleware is available
+func (ds *DataScheduler) executeWithRecovery(ctx context.Context, operation string, fn func() error) {
+	if ds.recoveryMiddleware != nil {
+		ds.recoveryMiddleware.WrapOperation(ctx, operation, fn)
+	} else {
+		if err := fn(); err != nil {
+			logrus.WithError(err).Errorf("Error in %s", operation)
+		}
+	}
+}
+
 // StartScheduledCollection starts all scheduled tasks
 func (ds *DataScheduler) StartScheduledCollection() {
 	ctx := context.Background()
 
 	// Every 5 minutes: Update prices (only during market hours)
 	ds.scheduler.Every(5).Minutes().Do(func() {
-		if isMarketOpen() {
-			if err := ds.collectorUseCase.UpdateAllPrices(ctx); err != nil {
-				logrus.Error("Failed to update prices:", err)
+		ds.executeWithRecovery(ctx, "UpdatePrices", func() error {
+			if isMarketOpen() {
+				return ds.collectorUseCase.UpdateAllPrices(ctx)
 			}
-		}
+			return nil
+		})
 	})
 
 	// Every 30 minutes: Update configurations
 	ds.scheduler.Every(30).Minutes().Do(func() {
-		if err := ds.collectorUseCase.UpdateWatchList(ctx); err != nil {
-			logrus.Error("Failed to update watch list:", err)
-		}
+		ds.executeWithRecovery(ctx, "UpdateWatchList", func() error {
+			return ds.collectorUseCase.UpdateWatchList(ctx)
+		})
 
-		if err := ds.collectorUseCase.UpdatePortfolio(ctx); err != nil {
-			logrus.Error("Failed to update portfolio:", err)
-		}
+		ds.executeWithRecovery(ctx, "UpdatePortfolio", func() error {
+			return ds.collectorUseCase.UpdatePortfolio(ctx)
+		})
 	})
 
 	// Daily at 8:00 AM JST: Send daily report
 	ds.scheduler.Every(1).Day().At("08:00").Do(func() {
-		if err := ds.reporterUseCase.GenerateAndSendDailyReport(ctx); err != nil {
-			logrus.Error("Failed to send daily report:", err)
-		}
+		ds.executeWithRecovery(ctx, "SendDailyReport", func() error {
+			return ds.reporterUseCase.GenerateAndSendDailyReport(ctx)
+		})
 	})
 
 	// Daily at 2:00 AM JST: Cleanup old data
 	ds.scheduler.Every(1).Day().At("02:00").Do(func() {
-		if err := ds.collectorUseCase.CleanupOldData(ctx, 365); err != nil {
-			logrus.Error("Failed to cleanup old data:", err)
-		}
+		ds.executeWithRecovery(ctx, "CleanupOldData", func() error {
+			return ds.collectorUseCase.CleanupOldData(ctx, 365)
+		})
 	})
 
 	ds.scheduler.StartAsync()
