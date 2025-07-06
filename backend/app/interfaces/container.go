@@ -13,13 +13,14 @@ import (
 // Container holds all the dependencies for the application
 type Container struct {
 	// Infrastructure
-	config              *config.Config
-	connectionManager   database.ConnectionManager
-	transactionManager  repository.TransactionManager
-	stockRepository     repository.StockRepository
-	portfolioRepository repository.PortfolioRepository
-	stockDataClient     client.StockDataClient
-	notificationService notification.NotificationService
+	config                    *config.Config
+	connectionManager         database.ConnectionManager
+	transactionManager        repository.TransactionManager
+	stockRepository           repository.StockRepository
+	portfolioRepository       repository.PortfolioRepository
+	notificationLogRepository repository.NotificationLogRepository
+	stockDataClient           client.StockDataClient
+	notificationService       notification.NotificationService
 
 	// Domain Services
 	portfolioService         *domain.PortfolioService
@@ -83,6 +84,7 @@ func (c *Container) initializeInfrastructure() error {
 	// Repositories
 	c.stockRepository = repository.NewStockRepository(connMgr.GetExecutor())
 	c.portfolioRepository = repository.NewPortfolioRepository(connMgr.GetExecutor())
+	c.notificationLogRepository = repository.NewNotificationLogRepository(connMgr.GetExecutor())
 
 	// External clients
 	yahooConfig := client.YahooFinanceConfig{
@@ -97,11 +99,16 @@ func (c *Container) initializeInfrastructure() error {
 	c.stockDataClient = client.NewYahooFinanceClientWithConfig(yahooConfig)
 
 	// Notification service
-	c.notificationService = notification.NewSlackNotificationService(
+	slackNotifier := notification.NewSlackNotificationService(
 		c.config.Slack.WebhookURL,
 		c.config.Slack.Channel,
 		c.config.Slack.Username,
 	)
+	// Set notification log repository if it's a SlackNotifier
+	if sn, ok := slackNotifier.(*notification.SlackNotifier); ok {
+		sn.SetLogRepository(c.notificationLogRepository)
+	}
+	c.notificationService = slackNotifier
 
 	return nil
 }
