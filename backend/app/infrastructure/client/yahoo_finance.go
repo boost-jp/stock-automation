@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/boost-jp/stock-automation/app/domain/models"
+	"github.com/boost-jp/stock-automation/app/utility"
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
 )
@@ -152,6 +153,7 @@ func (y *YahooFinanceClient) GetCurrentPrice(stockCode string) (*models.StockPri
 	meta := result.Meta
 
 	stockPrice := &models.StockPrice{
+		ID:         utility.NewULID(),
 		Code:       stockCode,
 		Date:       time.Now(),
 		OpenPrice:  floatToDecimal(meta.RegularMarketOpen),
@@ -235,6 +237,7 @@ func (y *YahooFinanceClient) GetHistoricalData(stockCode string, days int) ([]*m
 		}
 
 		price := &models.StockPrice{
+			ID:         utility.NewULID(),
 			Code:       stockCode,
 			Date:       time.Unix(ts, 0),
 			OpenPrice:  floatToDecimal(quotes.Open[i]),
@@ -299,6 +302,7 @@ func (y *YahooFinanceClient) GetIntradayData(stockCode string, interval string) 
 		}
 
 		price := &models.StockPrice{
+			ID:         utility.NewULID(),
 			Code:       stockCode,
 			Date:       time.Unix(ts, 0),
 			OpenPrice:  floatToDecimal(quotes.Open[i]),

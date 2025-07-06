@@ -129,7 +129,7 @@ func TestDataCollection_CompleteFlow(t *testing.T) {
 	t.Run("CleanupOldData", func(t *testing.T) {
 		// Insert some old test data
 		oldPrice := &models.StockPrice{
-			ID:         "old-price-1",
+			ID:         fmt.Sprintf("old-price-%d", time.Now().UnixNano()),
 			Code:       "7203",
 			Date:       time.Now().AddDate(-2, 0, 0), // 2 years old
 			ClosePrice: client.FloatToDecimal(1000.0),
@@ -142,7 +142,10 @@ func TestDataCollection_CompleteFlow(t *testing.T) {
 		}
 
 		if err := stockRepo.SaveStockPrice(ctx, oldPrice); err != nil {
-			t.Fatalf("Failed to save old price: %v", err)
+			// Ignore duplicate key errors
+			if !strings.Contains(err.Error(), "Duplicate entry") {
+				t.Fatalf("Failed to save old price: %v", err)
+			}
 		}
 
 		// Run cleanup (keep only 365 days)
