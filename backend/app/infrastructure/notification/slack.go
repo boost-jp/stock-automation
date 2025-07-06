@@ -210,17 +210,17 @@ func (s *SlackNotifier) SendComprehensiveReport(report string, summary *domain.P
 			Fields: []SlackField{
 				{
 					Title: "総資産",
-					Value: fmt.Sprintf("¥%,.0f", summary.TotalValue),
+					Value: fmt.Sprintf("¥%.0f", summary.TotalValue),
 					Short: true,
 				},
 				{
 					Title: "総投資額",
-					Value: fmt.Sprintf("¥%,.0f", summary.TotalCost),
+					Value: fmt.Sprintf("¥%.0f", summary.TotalCost),
 					Short: true,
 				},
 				{
 					Title: "損益",
-					Value: fmt.Sprintf("¥%,.0f", summary.TotalGain),
+					Value: fmt.Sprintf("¥%.0f", summary.TotalGain),
 					Short: true,
 				},
 				{
@@ -248,7 +248,7 @@ func (s *SlackNotifier) SendComprehensiveReport(report string, summary *domain.P
 
 			holdings.Fields = append(holdings.Fields, SlackField{
 				Title: fmt.Sprintf("%s %s (%s)", holdingColor, holding.Name, holding.Code),
-				Value: fmt.Sprintf("数量: %d | 現在値: ¥%,.0f | 損益: ¥%,.0f (%.1f%%)",
+				Value: fmt.Sprintf("数量: %d | 現在値: ¥%.0f | 損益: ¥%.0f (%.1f%%)",
 					holding.Shares, holding.CurrentPrice, holding.Gain, holding.GainPercent),
 				Short: false,
 			})
