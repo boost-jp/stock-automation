@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/boost-jp/stock-automation/app/infrastructure/repository"
 	"github.com/sirupsen/logrus"
 )
 
@@ -46,6 +47,8 @@ func (c *CLI) Run(args []string) error {
 			return fmt.Errorf("watchlist command requires subcommand: add, list, remove")
 		}
 		return c.runWatchlistCommand(args[2:])
+	case "logs":
+		return c.runSchedulerLogs()
 	case "help":
 		c.printHelp()
 		return nil
@@ -201,6 +204,56 @@ func (c *CLI) runWatchlistCommand(args []string) error {
 	}
 }
 
+// runSchedulerLogs displays recent scheduler logs
+func (c *CLI) runSchedulerLogs() error {
+	ctx := context.Background()
+
+	// Get scheduler log repository
+	var schedulerLogRepo repository.SchedulerLogRepository
+	if scheduler := c.container.GetScheduler(); scheduler != nil && scheduler.logRepo != nil {
+		schedulerLogRepo = scheduler.logRepo
+	} else {
+		// Create a new one if not available
+		schedulerLogRepo = repository.NewSchedulerLogRepository(c.container.GetConnectionManager().GetExecutor())
+	}
+
+	logs, err := schedulerLogRepo.GetRecentLogs(ctx, 20)
+	if err != nil {
+		return fmt.Errorf("failed to get scheduler logs: %w", err)
+	}
+
+	fmt.Printf("\n📋 Recent Scheduler Logs\n")
+	fmt.Printf("========================\n\n")
+
+	if len(logs) == 0 {
+		fmt.Println("No logs found.")
+		return nil
+	}
+
+	for _, log := range logs {
+		statusIcon := "✅"
+		if log.Status == "running" {
+			statusIcon = "🔄"
+		} else if log.Status == "failed" {
+			statusIcon = "❌"
+		}
+
+		fmt.Printf("%s %s - %s\n", statusIcon, log.TaskName, log.StartedAt.Format("2006-01-02 15:04:05"))
+
+		if log.CompletedAt != nil && log.DurationMs.Valid {
+			fmt.Printf("   Duration: %dms\n", log.DurationMs.Int64)
+		}
+
+		if log.ErrorMessage.Valid {
+			fmt.Printf("   Error: %s\n", log.ErrorMessage.String)
+		}
+
+		fmt.Println()
+	}
+
+	return nil
+}
+
 // printHelp displays the help message
 func (c *CLI) printHelp() {
 	fmt.Println(`Stock Automation CLI
@@ -212,6 +265,7 @@ Commands:
   scheduler, run    Start the scheduler (default)
   collect          Run immediate data collection
   report           Generate and send daily report
+  logs             Show recent scheduler logs
   portfolio        Manage portfolio
     add            Add a stock to portfolio
     list           List portfolio holdings
@@ -226,6 +280,7 @@ Examples:
   stock-automation                                   # Start scheduler
   stock-automation collect                           # Run data collection
   stock-automation report                            # Send daily report
+  stock-automation logs                              # Show scheduler logs
   stock-automation portfolio list                    # Show portfolio
   stock-automation portfolio add 7203 Toyota 100 2000  # Add to portfolio
   stock-automation watchlist add 9983 FastRetailing    # Add to watchlist`)

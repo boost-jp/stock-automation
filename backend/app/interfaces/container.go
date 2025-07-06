@@ -19,6 +19,7 @@ type Container struct {
 	stockRepository           repository.StockRepository
 	portfolioRepository       repository.PortfolioRepository
 	notificationLogRepository repository.NotificationLogRepository
+	schedulerLogRepository    repository.SchedulerLogRepository
 	stockDataClient           client.StockDataClient
 	notificationService       notification.NotificationService
 
@@ -85,6 +86,7 @@ func (c *Container) initializeInfrastructure() error {
 	c.stockRepository = repository.NewStockRepository(connMgr.GetExecutor())
 	c.portfolioRepository = repository.NewPortfolioRepository(connMgr.GetExecutor())
 	c.notificationLogRepository = repository.NewNotificationLogRepository(connMgr.GetExecutor())
+	c.schedulerLogRepository = repository.NewSchedulerLogRepository(connMgr.GetExecutor())
 
 	// External clients
 	yahooConfig := client.YahooFinanceConfig{
@@ -146,6 +148,7 @@ func (c *Container) initializeInterfaces() {
 		c.collectDataUseCase,
 		c.portfolioReportUseCase,
 	)
+	c.scheduler.SetLogRepository(c.schedulerLogRepository)
 }
 
 // GetConnectionManager returns the database connection manager
